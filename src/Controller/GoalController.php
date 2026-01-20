@@ -2,30 +2,64 @@
 // src/Controller/GoalController.php
 namespace App\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Doctrine\ORM\EntityManagerInterface;
+
+use App\Form\Type\TaskType;
+
+use App\Entity\User;
+use App\Entity\Task;
+
+
 
 class GoalController extends AbstractController
 {
 
-    #[Route('/')]
-    public function pruebaLogin(): Response
+    #[Route('/home', name: 'dashboard')]
+    public function privateHome(Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
-        return $this->render('security/login.html.twig', [
-            'last_username' => $lastUsername,
-            'error' => $error,
+        $task = new Task();
+
+        $form = $this->createForm(TaskType::class, $task);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $task = $form->getData();
+
+            $user = $this->getUser();
+            $task->setOwner($user);
+
+            $entityManager->persist($task);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('dashboard');
+        }
+
+        //return $this->render('dashboard.html.twig');
+
+        return $this->render('dashboard.html.twig', [
+            'form' => $form,
         ]);
     }
 
-    #[Route('/home')]
-    public function pruebaHome(): Response
+    #[Route('/', name: 'frontpage')]
+    public function publicFrontpage(): Response
     {
-        //$this->denyAccessUnlessGranted('IS_AUTHENTICATED');
-
-        return $this->render('home.html.twig');
+      return $this->render('frontpage.html.twig');
     }
+
+
+
+
 }
