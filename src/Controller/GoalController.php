@@ -15,6 +15,17 @@ class GoalController extends AbstractController
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
-        return $this->render('pruebalogin.html.twig');
+        return $this->render('security/login.html.twig', [
+            'last_username' => $lastUsername,
+            'error' => $error,
+        ]);
+    }
+
+    #[Route('/home')]
+    public function pruebaHome(): Response
+    {
+        //$this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+        return $this->render('home.html.twig');
     }
 }
