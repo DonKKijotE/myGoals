@@ -59,6 +59,19 @@ class GoalController extends AbstractController
       return $this->render('frontpage.html.twig');
     }
 
+    #[Route('/current', name: 'frontpage_currentweek')]
+    public function publicCurrentWeek(EntityManagerInterface $entityManager): Response
+    {
+      $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+      $user = $this->getUser();
+
+
+
+
+      return $this->render('currentweek.html.twig');
+    }
+
+
 
 
 
