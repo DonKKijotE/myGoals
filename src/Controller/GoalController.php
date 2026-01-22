@@ -41,9 +41,9 @@ class GoalController extends AbstractController
 
             // Setting datetime manually until datepicker is put into form.
 
-            $startdate = new \DateTime("2026-01-23 08:00:00");
+            $startdate = new \DateTime("2026-01-22 09:00:00");
             $task->setStart($startdate);
-            $enddate = new \DateTime('2026-01-24 12:00:00');
+            $enddate = new \DateTime('2026-01-22 10:00:00');
             $task->setEndTime($enddate);
 
 
@@ -91,6 +91,8 @@ class GoalController extends AbstractController
 
          $eventCollection[] = array(
              'title' => $item->getName(),
+             'description' => $item->getDescription(),
+             'category' => $item->getCategory(),
              'start' => $start,
              'end' => $end,
              // ... Same for each property you want
@@ -110,15 +112,46 @@ class GoalController extends AbstractController
     }
 
     #[Route('/current', name: 'frontpage_currentweek')]
-    public function publicCurrentWeek(EntityManagerInterface $entityManager): Response
+    public function publicCurrentWeek(Request $request, EntityManagerInterface $entityManager): Response
     {
       $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
-      $user = $this->getUser();
+
+      $task = new Task();
+
+      $form = $this->createForm(TaskType::class, $task);
+
+      $form->handleRequest($request);
+
+      if ($form->isSubmitted() && $form->isValid()) {
+
+          $task = $form->getData();
+
+          // Setting datetime manually until datepicker is put into form.
+
+          //$startdate = new \DateTime("2026-01-20 09:00:00");
+          //$task->setStart($startdate);
+          //$enddate = new \DateTime('2026-01-20 10:00:00');
+          //$task->setEndTime($enddate);
+
+
+          $user = $this->getUser();
+          $task->setOwner($user);
+
+          $entityManager->persist($task);
+          $entityManager->flush();
+
+          return $this->redirectToRoute('frontpage_currentweek');
+      }
+
+      //return $this->render('dashboard.html.twig');
+
+      return $this->render('currentweek.html.twig', [
+          'form' => $form,
+      ]);
 
 
 
-
-      return $this->render('currentweek.html.twig');
+      //return $this->render('currentweek.html.twig');
     }
 
 

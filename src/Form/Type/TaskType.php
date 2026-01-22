@@ -8,6 +8,7 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -21,8 +22,9 @@ class TaskType extends AbstractType
             ->add('name', TextType::class)
             ->add('description', TextareaType::class)
             ->add('category', TextType::class)
+            ->add('start', DateTimeType::class)
+            ->add('endtime', DateTimeType::class)
             ->add('weektimes', TextType::class)
-            //->add('everyweek', TextType::class)
             ->add('everyweek', ChoiceType::class, [
                 'choices'  => [
                     'Sí' => true,

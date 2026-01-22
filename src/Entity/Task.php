@@ -35,7 +35,7 @@ class Task
     #[ORM\Column]
     private ?\DateTime $start = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?\DateTime $endtime = null;
 
     public function getId(): ?int

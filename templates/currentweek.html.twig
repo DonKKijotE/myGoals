@@ -1,46 +1,205 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Esto Es Una Prueba{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+{% extends 'base.html.twig' %}
+
+{% block title %}myGoals - Calendar View{% endblock %}
+
         {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
-        {% endblock %}
+        {{ parent() }}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" integrity="sha512-MQXduO8IQnJVq1qmySpN87QQkiR1bZHtorbJBD0tzy7/0U9+YIC93QWHeGTEoojMVHWWNkoCp8V6OzVSYrX0oQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />        {% endblock %}
 
         {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-
+            {{ parent() }}
             {{ encore_entry_script_tags('fc-locales') }}
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js" integrity="sha512-K/oyQtMXpxI4+K0W7H25UopjM8pzq0yrVdFdG21Fh5dBe91I40pDd9A4lzNlHPHBIP2cwZuoxaUSX0GJSObvGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
             <script>
+              var fp = flatpickr("#task_start", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                altInput: true,
+                altFormat: "d/m/Y H:i",
+                defaultHour: 09,
+                defaultMinute: 00,
+
+              });
+
+              var fp = flatpickr("#task_endtime", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                altInput: true,
+                altFormat: "d/m/Y H:i",
+                defaultHour: 09,
+                defaultMinute: 00,
+
+              });
+            </script>
+            <script>
+
+
 
               document.addEventListener('DOMContentLoaded', function() {
                 var calendarEl = document.getElementById('calendar');
                 var calendar = new FullCalendar.Calendar(calendarEl, {
-                  initialView: 'dayGridWeek',
+                  initialView: 'dayGridMonth',
+                  themeSystem: 'bootstrap5',
+                  selectable: true,
                   locale: 'es',
                   height: 650,
-                  events: '/get-events'
+                  events: '/get-events',
+                  eventClick: function(info) {
+                    const verEvento = new bootstrap.Modal(document.getElementById("verEvento"));
+
+                    document.getElementById("tarea_nombre").innerText = info.event.title;
+                    document.getElementById("tarea_desc").innerText = info.event.extendedProps.description;
+                    document.getElementById("tarea_cat").innerText = info.event.extendedProps.category;
+                    document.getElementById("tarea_inicio").innerText = info.event.start.toLocaleString();
+                    document.getElementById("tarea_fin").innerText = info.event.end !== null ? info.event.end.toLocaleString() : info.event.start.toLocaleString();
+
+                    verEvento.show();
+                  },
+                  select: function(info){
+                    const crearEvento = new bootstrap.Modal(document.getElementById("crearEvento"));
+
+
+
+                    crearEvento.show();
+                  }
                 });
                 calendar.render();
-              });
+
+                });
 
             </script>
+
+
         {% endblock %}
-    </head>
-    <body>
-      <div class="home-page">
-          <div class="cabecera">
-            Hola
-          </div>
-          <div class="cuerpo">
-            <h1 class="entrada">Calendario</h1>
 
-            <div id='calendar'></div>
+{% block body %}
 
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">myGoals</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Dropdown
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="#">Action</a></li>
+            <li><a class="dropdown-item" href="#">Another action</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Something else here</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+        </li>
+      </ul>
+      <form class="d-flex">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+    </div>
+  </div>
+</nav>
 
-          </div>
+<main role="main" class="container">
+
+<h1>Calendar View</h1>
+
+<div id='calendar'></div>
+
+<div class="modal fade" id="verEvento" tabindex="-1" aria-labelledby="verEventoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="verEventoLabel">Detalles De La Tarea</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-    </body>
-</html>
+      <div class="modal-body">
+        <dl class="row">
+          <dt class="col-sm-3">Tarea:</dt>
+          <dd class="col-sm-9" id="tarea_nombre">Nombre de la tarea</dd>
+          <dt class="col-sm-3">Descripción:</dt>
+          <dd class="col-sm-9" id="tarea_desc">Descripción de la tarea</dd>
+          <dt class="col-sm-3">Categoría:</dt>
+          <dd class="col-sm-9" id="tarea_cat">Categoría de la tarea</dd>
+          <dt class="col-sm-3">Inicio:</dt>
+          <dd class="col-sm-9" id="tarea_inicio">Fecha de inicio de la tarea</dd>
+          <dt class="col-sm-3">Fin:</dt>
+          <dd class="col-sm-9" id="tarea_fin">Fecha de fin de la tarea</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="crearEvento" tabindex="-1" aria-labelledby="crearEventoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="crearEventoLabel">Crear Tarea</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ path('frontpage_currentweek') }}" method="post">
+
+        <div class="mb-3">
+            {{ form_row(form.name, { label:'Título',attr: { 'class': 'form-control', 'placeholder': 'Nombre de la tarea.' } }) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form_row(form.description, { label:'Información Adicional', attr: { 'class': 'form-control', 'placeholder': 'Información adicional.', 'rows': '4' } }) }}
+
+
+        </div>
+
+        <div class="mb-3">
+            {{ form_row(form.category, { attr: { 'class': 'form-control', 'placeholder': 'Categoría' } }) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form_row(form.start, { attr: { 'class': 'form-control', 'placeholder': 'Inicio' } }) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form_row(form.endtime, { attr: { 'class': 'form-control', 'placeholder': 'Fin' } }) }}
+        </div>
+
+        <div class="mb-3">
+
+            {{ form_row(form.weektimes, { label:'Veces Por Semana', attr: { 'class': 'form-control', 'placeholder': 'Cuántas Veces Por Semana' } }) }}
+
+        </div>
+
+        <div class="mb-3">
+            {{ form_row(form.everyweek, { label:'Repetir Cada Semana', attr: { 'class': 'form-control', 'placeholder': '¿Repetir Cada Semana?' } }) }}
+        </div>
+
+
+
+        <div class="mb-3">
+            <button class="btn btn-primary" type="submit">Crear Tarea</button>
+        </div>
+
+        {{ form_rest(form) }}
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+{% endblock %}
