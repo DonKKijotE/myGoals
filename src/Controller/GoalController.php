@@ -5,9 +5,11 @@ namespace App\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,6 +39,14 @@ class GoalController extends AbstractController
 
             $task = $form->getData();
 
+            // Setting datetime manually until datepicker is put into form.
+
+            $startdate = new \DateTime("2026-01-23 08:00:00");
+            $task->setStart($startdate);
+            $enddate = new \DateTime('2026-01-24 12:00:00');
+            $task->setEndTime($enddate);
+
+
             $user = $this->getUser();
             $task->setOwner($user);
 
@@ -52,6 +62,46 @@ class GoalController extends AbstractController
             'form' => $form,
         ]);
     }
+
+    #[Route('/get-events', name: 'get_events')]
+    public function privateGetEvents(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+
+    $user = $this->getUser();
+
+    $events = $entityManager->getRepository(Task::class)->findBy(
+    ['owner' => $user],
+    ['start' => 'ASC']
+    );
+
+
+
+    if (!$events) {
+        throw $this->createNotFoundException(
+            'No events found for user '.$user->getEmail()
+       );
+    }
+
+    $eventCollection = array();
+
+    foreach($events as $item) {
+
+        $start=date_format($item->getStart(), 'Y-m-d H:i:s');
+        $end=date_format($item->getEndtime(), 'Y-m-d H:i:s');
+
+         $eventCollection[] = array(
+             'title' => $item->getName(),
+             'start' => $start,
+             'end' => $end,
+             // ... Same for each property you want
+         );
+    }
+
+    return new JsonResponse($eventCollection);
+
+    }
+
+
 
     #[Route('/', name: 'frontpage')]
     public function publicFrontpage(): Response

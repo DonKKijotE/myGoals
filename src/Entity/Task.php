@@ -32,6 +32,12 @@ class Task
     #[ORM\JoinColumn(nullable: false)]
     private ?user $owner = null;
 
+    #[ORM\Column]
+    private ?\DateTime $start = null;
+
+    #[ORM\Column]
+    private ?\DateTime $endtime = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -105,6 +111,30 @@ class Task
     public function setOwner(?user $owner): static
     {
         $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getStart(): ?\DateTime
+    {
+        return $this->start;
+    }
+
+    public function setStart(\DateTime $start): static
+    {
+        $this->start = $start;
+
+        return $this;
+    }
+
+    public function getEndtime(): ?\DateTime
+    {
+        return $this->endtime;
+    }
+
+    public function setEndtime(\DateTime $endtime): static
+    {
+        $this->endtime = $endtime;
 
         return $this;
     }

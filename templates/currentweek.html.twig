@@ -10,69 +10,18 @@
 
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
-            <script src=" https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js "></script>
+
+            {{ encore_entry_script_tags('fc-locales') }}
+            <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
             <script>
 
               document.addEventListener('DOMContentLoaded', function() {
                 var calendarEl = document.getElementById('calendar');
                 var calendar = new FullCalendar.Calendar(calendarEl, {
-                  initialView: 'dayGridMonth',
-                  events: [
-        {
-          title: 'All Day Event',
-          start: '2023-01-01'
-        },
-        {
-          title: 'Long Event',
-          start: '2023-01-07',
-          end: '2023-01-10'
-        },
-        {
-          groupId: 999,
-          title: 'Repeating Event',
-          start: '2023-01-09T16:00:00'
-        },
-        {
-          groupId: 999,
-          title: 'Repeating Event',
-          start: '2023-01-16T16:00:00'
-        },
-        {
-          title: 'Conference',
-          start: '2023-01-11',
-          end: '2023-01-13'
-        },
-        {
-          title: 'Meeting',
-          start: '2023-01-12T10:30:00',
-          end: '2023-01-12T12:30:00'
-        },
-        {
-          title: 'Lunch',
-          start: '2023-01-12T12:00:00'
-        },
-        {
-          title: 'Meeting',
-          start: '2023-01-12T14:30:00'
-        },
-        {
-          title: 'Happy Hour',
-          start: '2023-01-12T17:30:00'
-        },
-        {
-          title: 'Dinner',
-          start: '2023-01-12T20:00:00'
-        },
-        {
-          title: 'Birthday Party',
-          start: '2023-01-13T07:00:00'
-        },
-        {
-          title: 'Click for Google',
-          url: 'http://google.com/',
-          start: '2023-01-28'
-        }
-      ]
+                  initialView: 'dayGridWeek',
+                  locale: 'es',
+                  height: 650,
+                  events: '/get-events'
                 });
                 calendar.render();
               });
@@ -86,24 +35,7 @@
             Hola
           </div>
           <div class="cuerpo">
-            <h1 class="entrada">Panel De Control</h1>
-            <p class="entrada">It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
-            </p>
-            <h1 class="entrada" style="text-align:center;">Vista Semanal</h1>
-            {% set hoy = date() %}
-            {% set lunes = hoy|date_modify('monday this week') %}
-            <table width="100%" border="1">
-
-                <tr>
-                    {% for i in 0..6 %}
-                        {% set dia = lunes|date_modify('+' ~ i ~ ' days') %}
-                        <td style="text-align:center;">
-                            <strong>{{ dia|date('l') }}</strong><br>
-                            {{ dia|date('d/m/Y') }}
-                        </td>
-                    {% endfor %}
-                </tr>
-            </table>
+            <h1 class="entrada">Calendario</h1>
 
             <div id='calendar'></div>
 
