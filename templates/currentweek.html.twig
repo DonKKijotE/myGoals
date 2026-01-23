@@ -12,29 +12,6 @@
             <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js" integrity="sha512-K/oyQtMXpxI4+K0W7H25UopjM8pzq0yrVdFdG21Fh5dBe91I40pDd9A4lzNlHPHBIP2cwZuoxaUSX0GJSObvGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
             <script>
-              var fp = flatpickr("#task_start", {
-                enableTime: true,
-                dateFormat: "Y-m-d H:i",
-                altInput: true,
-                altFormat: "d/m/Y H:i",
-                defaultHour: 09,
-                defaultMinute: 00,
-
-              });
-
-              var fp = flatpickr("#task_endtime", {
-                enableTime: true,
-                dateFormat: "Y-m-d H:i",
-                altInput: true,
-                altFormat: "d/m/Y H:i",
-                defaultHour: 09,
-                defaultMinute: 00,
-
-              });
-            </script>
-            <script>
-
-
 
               document.addEventListener('DOMContentLoaded', function() {
                 var calendarEl = document.getElementById('calendar');
@@ -57,7 +34,17 @@
                     verEvento.show();
                   },
                   select: function(info){
+
+                    console.log(info);
                     const crearEvento = new bootstrap.Modal(document.getElementById("crearEvento"));
+                    var inicio = new Date(info.startStr);
+                    inicio.setMinutes(inicio.getMinutes() - inicio.getTimezoneOffset());
+                    document.getElementById('task_start').value = inicio.toISOString().slice(0,16);
+                    document.getElementById('task_endtime').value = inicio.toISOString().slice(0,16);
+                    var prueba = inicio.toISOString().slice(0,16);
+                    console.log(prueba);
+                    //document.getElementById('cad_end').value = final.toISOString().slice(0,16);
+                    //document.getElementById('task_start').value = inicio;
 
 
 
@@ -160,8 +147,6 @@
 
         <div class="mb-3">
             {{ form_row(form.description, { label:'Información Adicional', attr: { 'class': 'form-control', 'placeholder': 'Información adicional.', 'rows': '4' } }) }}
-
-
         </div>
 
         <div class="mb-3">
@@ -185,8 +170,6 @@
         <div class="mb-3">
             {{ form_row(form.everyweek, { label:'Repetir Cada Semana', attr: { 'class': 'form-control', 'placeholder': '¿Repetir Cada Semana?' } }) }}
         </div>
-
-
 
         <div class="mb-3">
             <button class="btn btn-primary" type="submit">Crear Tarea</button>
