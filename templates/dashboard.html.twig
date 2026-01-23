@@ -64,7 +64,7 @@
           <form action="{{ path('dashboard') }}" method="post">
 
           <div class="mb-3">
-              {{ form_row(form.name, { label:'Título',attr: { 'class': 'form-control', 'placeholder': 'Nombre de la tarea.' } }) }}
+              {{ form_row(form.name, { label:'Título', attr: { 'class': 'form-control', 'placeholder': 'Nombre de la tarea.' } }) }}
           </div>
 
           <div class="mb-3">
@@ -74,7 +74,15 @@
           </div>
 
           <div class="mb-3">
-              {{ form_row(form.category, { attr: { 'class': 'form-control', 'placeholder': 'Categoría' } }) }}
+              {{ form_row(form.category, { label:'Categoría', attr: { 'class': 'form-control', 'placeholder': 'Categoría' } }) }}
+          </div>
+
+          <div class="mb-3">
+              {{ form_row(form.start, { label:'Inicio', attr: { 'class': 'form-control', 'placeholder': 'Inicio' } }) }}
+          </div>
+
+          <div class="mb-3">
+              {{ form_row(form.endtime, { label:'Fin', attr: { 'class': 'form-control', 'placeholder': 'Fin' } }) }}
           </div>
 
           <div class="mb-3">
