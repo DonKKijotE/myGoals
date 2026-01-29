@@ -11,3 +11,5 @@ h1 {
 
   padding-top: 1em;
   }
+
+div[id^="task_subtasks_"] {  border-top: 5px solid red;}

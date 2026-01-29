@@ -56,7 +56,31 @@
                 });
 
             </script>
+            <script>
+            document
+            .querySelectorAll('.add_item_link')
+            .forEach(btn => {
+                btn.addEventListener("click", addFormToCollection)
+            });
 
+            function addFormToCollection(e) {
+              const collectionHolder = document.querySelector('.' + e.currentTarget.dataset.collectionHolderClass);
+
+              const item = document.createElement('div');
+
+              item.innerHTML = collectionHolder
+                .dataset
+                .prototype
+                .replace(
+                  /__name__/g,
+                  collectionHolder.dataset.index
+                );
+
+              collectionHolder.appendChild(item);
+
+              collectionHolder.dataset.index++;
+          };
+            </script>
 
         {% endblock %}
 
@@ -171,11 +195,21 @@
             {{ form_row(form.everyweek, { label:'Repetir Cada Semana', attr: { 'class': 'form-control', 'placeholder': '¿Repetir Cada Semana?' } }) }}
         </div>
 
+        <button type="button" class="add_item_link btn btn-primary" data-collection-holder-class="subtasks">Add a subtask</button>
+
+        <br><br>
+
+        <div class="mb-3 subtasks"
+            data-index="{{ form.subtasks|length > 0 ? form.subtasks|last.vars.name + 1 : 0 }}"
+            data-prototype="{{ form_widget(form.subtasks.vars.prototype)|e('html_attr') }}"
+
+        ></div>
+
         <div class="mb-3">
             <button class="btn btn-primary" type="submit">Crear Tarea</button>
         </div>
 
-        {{ form_rest(form) }}
+          {{ form_rest(form) }}
 
         </form>
       </div>

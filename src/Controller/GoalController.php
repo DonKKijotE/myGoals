@@ -126,14 +126,6 @@ class GoalController extends AbstractController
 
           $task = $form->getData();
 
-          // Setting datetime manually until datepicker is put into form.
-
-          //$startdate = new \DateTime("2026-01-20 09:00:00");
-          //$task->setStart($startdate);
-          //$enddate = new \DateTime('2026-01-20 10:00:00');
-          //$task->setEndTime($enddate);
-
-
           $user = $this->getUser();
           $task->setOwner($user);
 

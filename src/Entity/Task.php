@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\TaskRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
@@ -37,6 +39,17 @@ class Task
 
     #[ORM\Column(nullable: true)]
     private ?\DateTime $endtime = null;
+
+    /**
+     * @var Collection<int, SubTask>
+     */
+    #[ORM\OneToMany(targetEntity: SubTask::class, mappedBy: 'maintask', cascade: ['persist'])]
+    private Collection $subTasks;
+
+    public function __construct()
+    {
+        $this->subTasks = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -135,6 +148,36 @@ class Task
     public function setEndtime(\DateTime $endtime): static
     {
         $this->endtime = $endtime;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SubTask>
+     */
+    public function getSubTasks(): Collection
+    {
+        return $this->subTasks;
+    }
+
+    public function addSubTask(SubTask $subTask): static
+    {
+        if (!$this->subTasks->contains($subTask)) {
+            $this->subTasks->add($subTask);
+            $subTask->setMaintask($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubTask(SubTask $subTask): static
+    {
+        if ($this->subTasks->removeElement($subTask)) {
+            // set the owning side to null (unless already changed)
+            if ($subTask->getMaintask() === $this) {
+                $subTask->setMaintask(null);
+            }
+        }
 
         return $this;
     }
