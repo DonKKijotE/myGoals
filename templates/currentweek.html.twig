@@ -42,7 +42,7 @@
                     document.getElementById('task_start').value = inicio.toISOString().slice(0,16);
                     document.getElementById('task_endtime').value = inicio.toISOString().slice(0,16);
                     var prueba = inicio.toISOString().slice(0,16);
-                    console.log(prueba);
+                    //console.log(prueba);
                     //document.getElementById('cad_end').value = final.toISOString().slice(0,16);
                     //document.getElementById('task_start').value = inicio;
 
@@ -63,10 +63,16 @@
                 btn.addEventListener("click", addFormToCollection)
             });
 
+            document
+            .querySelectorAll('ul.subtasks li')
+              .forEach((subtask) => {
+                  addTagFormDeleteLink(subtask)
+              })
+
             function addFormToCollection(e) {
               const collectionHolder = document.querySelector('.' + e.currentTarget.dataset.collectionHolderClass);
 
-              const item = document.createElement('div');
+              const item = document.createElement('li');
 
               item.innerHTML = collectionHolder
                 .dataset
@@ -78,8 +84,43 @@
 
               collectionHolder.appendChild(item);
 
+
+
+              addTagFormDeleteLink(item);
+
+              // Poner mismas fechas en los campos datetime de las subtask que en el task original
+
+              const indice = collectionHolder.dataset.index; //Vemos el index de cada item.
+
+              const original_inicio = document.getElementById("task_start");
+
+              const clon_inicio = document.getElementById(`task_subtasks_${indice}_start`);
+
+              clon_inicio.value = original_inicio.value;
+
+              const original_fin = document.getElementById("task_endtime");
+
+              const clon_fin = document.getElementById(`task_subtasks_${indice}_endtime`);
+
+              clon_fin.value = original_fin.value;
+
               collectionHolder.dataset.index++;
-          };
+
+              };
+
+              function addTagFormDeleteLink(item) {
+              const removeFormButton = document.createElement('button');
+              removeFormButton.className = "remove btn btn-danger";
+              removeFormButton.innerText = 'X';
+
+              item.prepend(removeFormButton);
+
+              removeFormButton.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  // remove the li for the tag form
+                  item.remove();
+              });
+              }
             </script>
 
         {% endblock %}
@@ -163,55 +204,63 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ path('frontpage_currentweek') }}" method="post">
+      {# {{ form(form) }} #}
 
-        <div class="mb-3">
-            {{ form_row(form.name, { label:'Título',attr: { 'class': 'form-control', 'placeholder': 'Nombre de la tarea.' } }) }}
-        </div>
+      <div class="form">
 
-        <div class="mb-3">
-            {{ form_row(form.description, { label:'Información Adicional', attr: { 'class': 'form-control', 'placeholder': 'Información adicional.', 'rows': '4' } }) }}
-        </div>
 
-        <div class="mb-3">
-            {{ form_row(form.category, { attr: { 'class': 'form-control', 'placeholder': 'Categoría' } }) }}
-        </div>
 
-        <div class="mb-3">
-            {{ form_row(form.start, { attr: { 'class': 'form-control', 'placeholder': 'Inicio' } }) }}
-        </div>
+                <form action="{{ path('frontpage_currentweek') }}" method="post">
 
-        <div class="mb-3">
-            {{ form_row(form.endtime, { attr: { 'class': 'form-control', 'placeholder': 'Fin' } }) }}
-        </div>
+                <div class="mb-3">
+                    {{ form_row(form.name, { label:'Título', attr: { 'class': 'form-control', 'placeholder': 'Nombre de la tarea.' } }) }}
+                </div>
 
-        <div class="mb-3">
+                <div class="mb-3">
+                    {{ form_row(form.description, { label:'Información Adicional', attr: { 'class': 'form-control', 'placeholder': 'Información adicional.', 'rows': '4' } }) }}
 
-            {{ form_row(form.weektimes, { label:'Veces Por Semana', attr: { 'class': 'form-control', 'placeholder': 'Cuántas Veces Por Semana' } }) }}
 
-        </div>
+                </div>
 
-        <div class="mb-3">
-            {{ form_row(form.everyweek, { label:'Repetir Cada Semana', attr: { 'class': 'form-control', 'placeholder': '¿Repetir Cada Semana?' } }) }}
-        </div>
+                <div class="mb-3">
+                    {{ form_row(form.category, { label:'Categoría', attr: { 'class': 'form-control', 'placeholder': 'Categoría' } }) }}
+                </div>
 
-        <button type="button" class="add_item_link btn btn-primary" data-collection-holder-class="subtasks">Add a subtask</button>
+                <div class="mb-3">
+                    {{ form_row(form.start, { label:'Inicio', attr: { 'class': 'form-control', 'placeholder': 'Inicio' } }) }}
+                </div>
 
-        <br><br>
+                <div class="mb-3">
+                    {{ form_row(form.endtime, { label:'Fin', attr: { 'class': 'form-control', 'placeholder': 'Fin' } }) }}
+                </div>
 
-        <div class="mb-3 subtasks"
-            data-index="{{ form.subtasks|length > 0 ? form.subtasks|last.vars.name + 1 : 0 }}"
-            data-prototype="{{ form_widget(form.subtasks.vars.prototype)|e('html_attr') }}"
+                <div class="mb-3">
 
-        ></div>
+                    {{ form_row(form.weektimes, { label:'Veces Por Semana', attr: { 'class': 'form-control', 'placeholder': 'Cuántas Veces Por Semana' } }) }}
 
-        <div class="mb-3">
-            <button class="btn btn-primary" type="submit">Crear Tarea</button>
-        </div>
+                </div>
 
-          {{ form_rest(form) }}
+                <div class="mb-3">
+                    {{ form_row(form.everyweek, { label:'Repetir Cada Semana', attr: { 'class': 'form-control', 'placeholder': '¿Repetir Cada Semana?' } }) }}
+                </div>
 
-        </form>
+                <button type="button" class="add_item_link btn btn-info" data-collection-holder-class="subtasks">Add a subtask</button>
+
+                <br><br>
+
+                <ul class="subtasks lista"
+                    data-index="{{ form.subtasks|length > 0 ? form.subtasks|last.vars.name + 1 : 0 }}"
+                    data-prototype="{{ form_widget(form.subtasks.vars.prototype)|e('html_attr') }}"
+                ></ul>
+
+
+                <div class="mb-3">
+                    <button class="btn btn-primary" type="submit">Crear Tarea</button>
+                </div>
+
+                {{ form_rest(form) }}
+
+                </form>
       </div>
     </div>
   </div>
