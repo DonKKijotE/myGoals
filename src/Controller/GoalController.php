@@ -18,11 +18,23 @@ use App\Form\Type\TaskType;
 
 use App\Entity\User;
 use App\Entity\Task;
+use App\Entity\SubTask;
+
+use App\Repository\TaskRepository;
+
+use App\Service\WeekService;
 
 
 
 class GoalController extends AbstractController
 {
+
+    private WeekService $weekService;
+
+    public function __construct(WeekService $weekService)
+    {
+        $this->weekService = $weekService;
+    }
 
     #[Route('/home', name: 'dashboard')]
     public function privateHome(Request $request, EntityManagerInterface $entityManager): Response
@@ -95,6 +107,7 @@ class GoalController extends AbstractController
              'category' => $item->getCategory(),
              'start' => $start,
              'end' => $end,
+             'status' => $item->isStatus(),
              // ... Same for each property you want
          );
     }
@@ -103,13 +116,36 @@ class GoalController extends AbstractController
 
     }
 
-
-
-    #[Route('/', name: 'frontpage')]
-    public function publicFrontpage(): Response
+    #[Route('/set-event-status/{id}', name: 'set_event_status')]
+    public function privateSetEventStatus(Request $request, EntityManagerInterface $entityManager, int $id): JsonResponse
     {
-      return $this->render('frontpage.html.twig');
+
+        // Meter un voter para que cada uno solo toque lo suyo.
+
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+        $event = $entityManager->getRepository(Task::class)->find($id);
+
+        if (!$event) {
+          throw $this->createNotFoundException('No task found for id '.$id);
+        }
+
+        if($event->isStatus() == 0) { $event->setStatus(1); }
+        else{ $event->setStatus(0); }
+
+        $entityManager->flush();
+
+        $response = array(
+          'task' => $event->getId(),
+          'status' => $event->isStatus(),
+          'success' => true,
+        );
+
+        return new JsonResponse($response);
+
+
     }
+
 
     #[Route('/current', name: 'frontpage_currentweek')]
     public function publicCurrentWeek(Request $request, EntityManagerInterface $entityManager): Response
@@ -146,6 +182,32 @@ class GoalController extends AbstractController
       //return $this->render('currentweek.html.twig');
     }
 
+    #[Route('/', name: 'frontpage')]
+    public function publicFrontpage(TaskRepository $taskRepository): JsonResponse
+    {
+
+        $week = $this->weekService->getWeek(); // current week
+        $startOfWeek = $week['start']; // DateTime object
+        $endOfWeek = $week['end'];     // DateTime object
+
+        // Get all events overlapping with the week
+        $events = $taskRepository->findEventsForWeek($startOfWeek, $endOfWeek);
+
+        $eventCollection = [];
+
+        foreach ($events as $item) {
+            $eventCollection[] = [
+                'title' => $item->getName(),
+                'description' => $item->getDescription(),
+                'category' => $item->getCategory(),
+                'start' => $item->getStart()->format('Y-m-d H:i:s'),
+                'end' => $item->getEndTime()->format('Y-m-d H:i:s'),
+                'status' => $item->isStatus(),
+            ];
+        }
+
+        return new JsonResponse($eventCollection);
+    }
 
 
 

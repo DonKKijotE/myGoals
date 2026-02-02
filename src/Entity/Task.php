@@ -32,7 +32,7 @@ class Task
 
     #[ORM\ManyToOne(inversedBy: 'tasks')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?user $owner = null;
+    private ?User $owner = null;
 
     #[ORM\Column]
     private ?\DateTime $start = null;
@@ -45,6 +45,9 @@ class Task
      */
     #[ORM\OneToMany(targetEntity: SubTask::class, mappedBy: 'maintask', cascade: ['persist'])]
     private Collection $subTasks;
+
+    #[ORM\Column]
+    private ?bool $status = null;
 
     public function __construct()
     {
@@ -116,12 +119,12 @@ class Task
         return $this;
     }
 
-    public function getOwner(): ?user
+    public function getOwner(): ?User
     {
         return $this->owner;
     }
 
-    public function setOwner(?user $owner): static
+    public function setOwner(?User $owner): static
     {
         $this->owner = $owner;
 
@@ -178,6 +181,18 @@ class Task
                 $subTask->setMaintask(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(bool $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

@@ -23,6 +23,7 @@ Encore
     .addEntry('app', './assets/app.js')
     .addEntry('fc-base', './assets/index.global.min.js')
     .addEntry('fc-locales', './assets/locales-all.global.js')
+    .addEntry('fc-config', './assets/fc-config.js')
 
     // When enabled, Webpack "splits" your files into smaller pieces for greater optimization.
     .splitEntryChunks()

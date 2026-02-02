@@ -40,4 +40,34 @@ class TaskRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    /**
+ * Obtiene todos los eventos que se solapan con una semana determinada.
+ *
+ * Lógica de filtrado:
+ * - e.start >= :weekStart AND e.endTime <= :weekEnd
+ *      → Solo eventos que empiezan y terminan completamente dentro de la semana.
+ * - e.start <= :weekEnd AND e.endTime >= :weekStart
+ *      → Todos los eventos que tengan algún día dentro de la semana, incluso si empiezan antes o terminan después.
+ *
+ * Se usa la segunda opción para incluir eventos de varios días.
+ *
+ * @param \DateTimeInterface $weekStart Inicio de la semana
+ * @param \DateTimeInterface $weekEnd   Fin de la semana
+ * @return Event[] Lista de eventos de la semana
+ */
+
+    public function findEventsForWeek(
+        \DateTimeInterface $startOfWeek,
+        \DateTimeInterface $endOfWeek
+    ): array {
+        return $this->createQueryBuilder('e')
+            ->where('e.start <= :weekEnd')
+            ->andWhere('e.endtime >= :weekStart')
+            ->setParameter('weekStart', $startOfWeek)
+            ->setParameter('weekEnd', $endOfWeek)
+            ->orderBy('e.start', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

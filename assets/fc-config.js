@@ -1,0 +1,54 @@
+document.addEventListener('DOMContentLoaded', function() {
+  var calendarEl = document.getElementById('calendar');
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridWeek',
+    headerToolbar: {
+      left: '',
+      center: 'title',
+      right: 'today,dayGridMonth,dayGridWeek,dayGridDay,prev,next' // user can switch between the two
+    },
+    buttonText: {
+      today:    'hoy',
+      month:    'mes',
+      week:     'semana',
+      day:      'dia',
+      list:     'lista'
+    },
+    themeSystem: 'bootstrap5',
+    selectable: true,
+    locale: 'es',
+    firstDay: 1,
+    height: 650,
+    events: '/get-events',
+    eventClick: function(info) {
+      const verEvento = new bootstrap.Modal(document.getElementById("verEvento"));
+
+      document.getElementById("tarea_nombre").innerText = info.event.title;
+      document.getElementById("tarea_desc").innerText = info.event.extendedProps.description;
+      document.getElementById("tarea_cat").innerText = info.event.extendedProps.category;
+      document.getElementById("tarea_inicio").innerText = info.event.start.toLocaleString();
+      document.getElementById("tarea_fin").innerText = info.event.end !== null ? info.event.end.toLocaleString() : info.event.start.toLocaleString();
+
+      verEvento.show();
+    },
+    select: function(info){
+
+      console.log(info);
+      const crearEvento = new bootstrap.Modal(document.getElementById("crearEvento"));
+      var inicio = new Date(info.startStr);
+      inicio.setMinutes(inicio.getMinutes() - inicio.getTimezoneOffset());
+      document.getElementById('task_start').value = inicio.toISOString().slice(0,16);
+      document.getElementById('task_endtime').value = inicio.toISOString().slice(0,16);
+      var prueba = inicio.toISOString().slice(0,16);
+      //console.log(prueba);
+      //document.getElementById('cad_end').value = final.toISOString().slice(0,16);
+      //document.getElementById('task_start').value = inicio;
+
+
+
+      crearEvento.show();
+    }
+  });
+  calendar.render();
+
+  });
