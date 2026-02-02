@@ -27,15 +27,7 @@ div[id^="task_subtasks_"] {
     list-style-type: none;
 }
 
-li {
-    padding: 0;
-    padding-inline-start: 0px;
-    list-style-type: none;
-    padding-bottom: 2em;
-}
-
 .remove {
   margin-top: 1.5em;
   margin-bottom: 1.5em;
-
 }
