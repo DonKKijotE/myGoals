@@ -80,12 +80,33 @@
               }
             </script>
             <script>
-            $(document).on('click','.estado', function() {
+            $(document).on('click','#estado', function() {
+
+            const $btn = $(this);
+            const eventId = $btn.attr('data-event-id');
+
+            // Construimos la URL usando el ID directamente
+            const url = `/set-event-status/${eventId}`;
+
                $.ajax({
                   type: "POST",
-                  url: '{{ (path("set_event_status", {"id": 6})) }}',
+                  url: url,
                   success: function(response) {
-                    $(".estado").html('Sin Finalizar');
+
+                    if(response.status == 1)
+                     {
+                      $("#estado").html('Sin Finalizar')
+                                  .removeClass().addClass("btn btn-warning");
+
+                     }
+
+                     else {
+                      $("#estado").html('Finalizar')
+                                  .removeClass().addClass("btn btn-success");
+                     }
+
+                    console.log(response.status);
+                    console.log(response.task);
                 }
                 });
             });
@@ -157,7 +178,7 @@
           <dd class="col-sm-9" id="tarea_inicio">Fecha de inicio de la tarea</dd>
           <dt class="col-sm-3">Fin:</dt>
           <dd class="col-sm-9" id="tarea_fin">Fecha de fin de la tarea</dd>
-          <dt class="col-sm-3"><button class="estado">Finalizar</button></dt>
+          <dt class="col-sm-6"><button id="estado" data-event-id=""></button></dt>
         </dl>
       </div>
     </div>

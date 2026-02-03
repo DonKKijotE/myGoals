@@ -102,6 +102,7 @@ class GoalController extends AbstractController
         $end=date_format($item->getEndtime(), 'Y-m-d H:i:s');
 
          $eventCollection[] = array(
+             'id' => $item->getId(),
              'title' => $item->getName(),
              'description' => $item->getDescription(),
              'category' => $item->getCategory(),
@@ -130,14 +131,20 @@ class GoalController extends AbstractController
           throw $this->createNotFoundException('No task found for id '.$id);
         }
 
-        if($event->isStatus() == 0) { $event->setStatus(1); }
-        else{ $event->setStatus(0); }
+        if($event->isStatus() == 0) {
+          $event->setStatus(1);
+          $marker = 1;
+        }
+        else{
+          $event->setStatus(0);
+          $marker = 0;
+            }
 
         $entityManager->flush();
 
         $response = array(
           'task' => $event->getId(),
-          'status' => $event->isStatus(),
+          'status' => $marker,
           'success' => true,
         );
 
@@ -164,6 +171,7 @@ class GoalController extends AbstractController
 
           $user = $this->getUser();
           $task->setOwner($user);
+          $task->setStatus(false);
 
           $entityManager->persist($task);
           $entityManager->flush();

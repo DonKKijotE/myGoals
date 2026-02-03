@@ -22,12 +22,26 @@ document.addEventListener('DOMContentLoaded', function() {
     events: '/get-events',
     eventClick: function(info) {
       const verEvento = new bootstrap.Modal(document.getElementById("verEvento"));
+      const cambiarEstado = document.getElementById("estado");
 
       document.getElementById("tarea_nombre").innerText = info.event.title;
       document.getElementById("tarea_desc").innerText = info.event.extendedProps.description;
       document.getElementById("tarea_cat").innerText = info.event.extendedProps.category;
       document.getElementById("tarea_inicio").innerText = info.event.start.toLocaleString();
       document.getElementById("tarea_fin").innerText = info.event.end !== null ? info.event.end.toLocaleString() : info.event.start.toLocaleString();
+
+      $(cambiarEstado).attr('data-event-id', info.event.id);
+
+      if(info.event.extendedProps.status == true)
+       {
+        $(cambiarEstado).html('Finalizada')
+                        .removeClass().addClass("btn btn-warning");
+       }
+
+       else {
+        $(cambiarEstado).html('Finalizar')
+                        .removeClass().addClass("btn btn-success");
+       }
 
       verEvento.show();
     },
