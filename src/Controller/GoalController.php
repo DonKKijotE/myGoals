@@ -68,7 +68,7 @@ class GoalController extends AbstractController
             return $this->redirectToRoute('dashboard');
         }
 
-        //return $this->render('dashboard.html.twig');
+
 
         return $this->render('dashboard.html.twig', [
             'form' => $form,
@@ -153,6 +153,33 @@ class GoalController extends AbstractController
 
     }
 
+    #[Route('/delete-event/{id}', name: 'delete_event')]
+    public function privateDeleteEvent(Request $request, EntityManagerInterface $entityManager, int $id): JsonResponse
+    {
+
+        // Meter un voter para que cada uno solo toque lo suyo.
+
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+        $event = $entityManager->getRepository(Task::class)->find($id);
+
+        if (!$event) {
+          throw $this->createNotFoundException('No task found for id '.$id);
+        }
+
+        $entityManager->remove($event);
+        $entityManager->flush();
+
+        $response = array(
+          'task' => $event->getId(),
+          'success' => true,
+        );
+
+        return new JsonResponse($response);
+
+
+    }
+
 
     #[Route('/current', name: 'frontpage_currentweek')]
     public function publicCurrentWeek(Request $request, EntityManagerInterface $entityManager): Response
@@ -191,7 +218,7 @@ class GoalController extends AbstractController
     }
 
     #[Route('/', name: 'frontpage')]
-    public function publicFrontpage(TaskRepository $taskRepository): JsonResponse
+    public function publicFrontpage(TaskRepository $taskRepository): Response
     {
 
         $week = $this->weekService->getWeek(); // current week
@@ -205,6 +232,7 @@ class GoalController extends AbstractController
 
         foreach ($events as $item) {
             $eventCollection[] = [
+                'id' => $item->getId(),
                 'title' => $item->getName(),
                 'description' => $item->getDescription(),
                 'category' => $item->getCategory(),
@@ -214,7 +242,36 @@ class GoalController extends AbstractController
             ];
         }
 
-        return new JsonResponse($eventCollection);
+        $totalEventos = count($eventCollection);
+
+        $hechos = 0;
+
+        foreach ($eventCollection as $evento) {
+            if ($evento['status']) { // no isStatus(), es un array
+                $hechos++;
+            }
+        }
+
+        // Evitamos división por cero
+        $porcentajeHechos = $totalEventos > 0 ? ($hechos / $totalEventos) * 100 : 0;
+
+
+
+
+
+
+        //return new JsonResponse($eventCollection);
+
+        return $this->render('frontpage.html.twig', [
+            'events' => $eventCollection,
+            'num_events' => $totalEventos,
+            'eventos_hechos' => $hechos,
+            'porcentajeHechos' => $porcentajeHechos,
+            'fechainicio' => $startOfWeek,
+            'fechafin' => $endOfWeek,
+        ]);
+
+
     }
 
 

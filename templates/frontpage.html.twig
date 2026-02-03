@@ -2,6 +2,65 @@
 
 {% block title %}myGoals - Frontpage{% endblock %}
 
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js" integrity="sha512-K/oyQtMXpxI4+K0W7H25UopjM8pzq0yrVdFdG21Fh5dBe91I40pDd9A4lzNlHPHBIP2cwZuoxaUSX0GJSObvGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+    $(document).on('click','.estado', function() {
+
+    const $btn = $(this);
+    const eventId = $btn.attr('data-event-id');
+
+    // Construimos la URL usando el ID directamente
+    const url = `/set-event-status/${eventId}`;
+
+       $.ajax({
+          type: "POST",
+          url: url,
+          success: function(response) {
+
+          location.reload();
+
+        }
+        });
+    });
+
+    // Cuando pinchas en el botón del evento para abrir el dialog de eliminar
+
+    $(document).on('click','.eliminar', function() {
+
+    const $btn = $(this);
+    const eliminarId = $btn.attr('data-event-id');
+    const cambiarEstado = document.getElementById("boton_eliminar");
+    $(cambiarEstado).attr('data-event-id', eliminarId);
+
+    });
+
+    // Cuando pinchas en el botón para eliminar definitivamente
+
+    $(document).on('click','#boton_eliminar', function() {
+
+    const $btn = $(this);
+    const eventId = $btn.attr('data-event-id');
+
+    // Construimos la URL usando el ID directamente
+    const url = `/delete-event/${eventId}`;
+
+       $.ajax({
+          type: "POST",
+          url: url,
+          success: function(response) {
+
+          location.reload();
+
+        }
+        });
+    });
+    </script>
+
+{% endblock %}
+
+
 
 {% block body %}
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -45,15 +104,128 @@
 
       <div class="starter-template">
 
-        <h1>Progreso Semanal</h1>
+      <h1>{{ fechainicio|date("d/m/Y") }} - {{ fechafin|date("d/m/Y") }} </h1>
+
         <br><br>
-        <div class="progress">
-          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width: 25%"></div>
+        <div class="progress mb-4" style="height: 30px; border-radius: 15px; overflow: hidden;">
+            <div id="progressBar"
+                 class="progress-bar"
+                 role="progressbar"
+                 style="width: 0%; height: 30px; padding: 0;"
+                 aria-valuenow="{{ porcentajeHechos|round(0) }}"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+                0%
+            </div>
         </div>
+        <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const progressBar = document.getElementById("progressBar");
+            if (!progressBar) return;
+
+            const porcentaje = parseInt(progressBar.getAttribute("aria-valuenow"));
+
+            // Asignar color según horquillas
+            if (porcentaje <= 20) {
+                progressBar.classList.add('bg-danger');
+            } else if (porcentaje <= 60) {
+                progressBar.classList.add('bg-warning');
+            } else if (porcentaje < 100) {
+                progressBar.classList.add('bg-info');
+            } else {
+                progressBar.classList.add('bg-success');
+            }
+
+            // Animación desde 0 hasta porcentaje
+            setTimeout(() => {
+                progressBar.style.width = porcentaje + "%";
+                progressBar.textContent = porcentaje + "%";
+            }, 50);
+        });
+        </script>
+
+
+        {% for fila in events|batch(4, null) %}
+            <div class="row mb-4">
+                {% for evento in fila %}
+                    {% if evento %}
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ evento.title }}</h5>
+
+                                    <p class="card-text flex-grow-1">
+                                        {{ evento.description }}
+                                    </p>
+                                    <div class="d-flex justify-content-between mt-auto">
+                                        <button type="button" class="btn btn-primary btn-sm" title="Acción 1" data-bs-toggle="modal" data-bs-target="#eventoModal{{ evento.id }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        {% if evento.status == false %}
+                                        <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-event-id="{{ evento.id }}">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-danger btn-sm estado" title="Cambiar Estado" data-event-id="{{ evento.id }}">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-danger btn-sm eliminar" title="Eliminar" data-event-id="{{ evento.id }}" data-bs-toggle="modal" data-bs-target="#modalEliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+
 
 
       </div>
 
-    </main>
+      {% for evento in events %}
+<div class="modal fade" id="eventoModal{{ evento.id }}" tabindex="-1" aria-labelledby="eventoModalLabel{{ evento.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventoModalLabel{{ evento.id }}">{{ evento.title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        {{ evento.description }}
+        {# Puedes añadir más campos: fecha, lugar, imagen, etc. #}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+
+
+<div class="modal" id="modalEliminar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" data-evento="titulo">Eliminar Tarea</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro? Si haces click en "Eliminar" se eliminará la tarea principal y las subtareas asociadas a ella de forma definitiva.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-danger" id="boton_eliminar" data-event-id="">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
 
 {% endblock %}

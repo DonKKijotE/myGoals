@@ -4,7 +4,8 @@
 
         {% block stylesheets %}
         {{ parent() }}
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" integrity="sha512-MQXduO8IQnJVq1qmySpN87QQkiR1bZHtorbJBD0tzy7/0U9+YIC93QWHeGTEoojMVHWWNkoCp8V6OzVSYrX0oQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />        {% endblock %}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" integrity="sha512-MQXduO8IQnJVq1qmySpN87QQkiR1bZHtorbJBD0tzy7/0U9+YIC93QWHeGTEoojMVHWWNkoCp8V6OzVSYrX0oQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        {% endblock %}
 
         {% block javascripts %}
             {{ parent() }}
@@ -160,7 +161,7 @@
 <div id='calendar'></div>
 
 <div class="modal fade" id="verEvento" tabindex="-1" aria-labelledby="verEventoLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h1 class="modal-title fs-5" id="verEventoLabel">Detalles De La Tarea</h1>
@@ -169,7 +170,7 @@
       <div class="modal-body">
         <dl class="row">
           <dt class="col-sm-3">Tarea:</dt>
-          <dd class="col-sm-9" id="tarea_nombre">Nombre de la tarea</dd>
+          <dd class="col-sm-9 text-capitalize" id="tarea_nombre">Nombre de la tarea</dd>
           <dt class="col-sm-3">Descripción:</dt>
           <dd class="col-sm-9" id="tarea_desc">Descripción de la tarea</dd>
           <dt class="col-sm-3">Categoría:</dt>
@@ -187,7 +188,7 @@
 
 <!-- Modal -->
 <div class="modal fade" id="crearEvento" tabindex="-1" aria-labelledby="crearEventoLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h1 class="modal-title fs-5" id="crearEventoLabel">Crear Tarea</h1>
