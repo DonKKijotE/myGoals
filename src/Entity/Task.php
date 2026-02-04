@@ -51,12 +51,8 @@ class Task
 
     public function __construct()
     {
-        $this->status = false;
-    }
-
-    public function __construct()
-    {
         $this->subTasks = new ArrayCollection();
+        $this->status = false;
     }
 
     public function getId(): ?int
