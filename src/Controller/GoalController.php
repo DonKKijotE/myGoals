@@ -198,8 +198,6 @@ class GoalController extends AbstractController
 
           $user = $this->getUser();
           $task->setOwner($user);
-          $task->setStatus(false);
-
           $entityManager->persist($task);
           $entityManager->flush();
 
