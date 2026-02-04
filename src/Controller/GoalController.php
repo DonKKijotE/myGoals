@@ -239,6 +239,7 @@ class GoalController extends AbstractController
                 'start' => $item->getStart()->format('Y-m-d H:i:s'),
                 'end' => $item->getEndTime()->format('Y-m-d H:i:s'),
                 'status' => $item->isStatus(),
+                'subtasks' => $item->getSubTasks(),
             ];
         }
 
@@ -254,10 +255,6 @@ class GoalController extends AbstractController
 
         // Evitamos división por cero
         $porcentajeHechos = $totalEventos > 0 ? ($hechos / $totalEventos) * 100 : 0;
-
-
-
-
 
 
         //return new JsonResponse($eventCollection);

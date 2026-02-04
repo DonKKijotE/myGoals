@@ -4,7 +4,7 @@
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js" integrity="sha512-K/oyQtMXpxI4+K0W7H25UopjM8pzq0yrVdFdG21Fh5dBe91I40pDd9A4lzNlHPHBIP2cwZuoxaUSX0GJSObvGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <script>
     $(document).on('click','.estado', function() {
 
@@ -104,7 +104,9 @@
 
       <div class="starter-template">
 
-      <h1>{{ fechainicio|date("d/m/Y") }} - {{ fechafin|date("d/m/Y") }} </h1>
+      <h1>Progreso Semanal</h1>
+
+      <h2><button type="button" class="btn btn-secondary"><i class="bi bi-rewind"></i></button> {{ fechainicio|date("d/m/Y") }} - {{ fechafin|date("d/m/Y") }} <button type="button" class="btn btn-secondary"><i class="bi bi-fast-forward"></i></button> </h2>
 
         <br><br>
         <div class="progress mb-4" style="height: 30px; border-radius: 15px; overflow: hidden;">
@@ -158,6 +160,9 @@
                                         {{ evento.description }}
                                     </p>
                                     <div class="d-flex justify-content-between mt-auto">
+                                        <button type="button" class="btn btn-info btn-sm" title="Acción 1" data-bs-toggle="modal" data-bs-target="#eventoModal{{ evento.id }}">
+                                            <i class="bi bi-zoom-in"></i>
+                                        </button>
                                         <button type="button" class="btn btn-primary btn-sm" title="Acción 1" data-bs-toggle="modal" data-bs-target="#eventoModal{{ evento.id }}">
                                             <i class="bi bi-pencil"></i>
                                         </button>
@@ -192,12 +197,36 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="eventoModalLabel{{ evento.id }}">{{ evento.title }}</h5>
+        <h5 class="modal-title text-uppercase" id="eventoModalLabel{{ evento.id }}">{{ evento.title }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         {{ evento.description }}
-        {# Puedes añadir más campos: fecha, lugar, imagen, etc. #}
+        <br><br>
+        <dl class="row">
+          <dt class="col-sm-3">Categoría:</dt>
+          <dd class="col-sm-9" id="tarea_cat">{{evento.category}}</dd>
+          <dt class="col-sm-3">Inicio:</dt>
+          <dd class="col-sm-9">{{evento.start|date("d/m/Y H:s")}}</dd>
+          <dt class="col-sm-3">Fin:</dt>
+          <dd class="col-sm-9">{{evento.end|date("d/m/Y H:s")}}</dd>
+        </dl>
+        <h5 class="modal-title">Subtareas</h5>
+        <br>
+        {% if evento.subtasks|length > 0 %}
+        {% for subtarea in evento.subtasks %}
+        <dl class="row">
+          <dt class="col-sm-3">Tarea:</dt>
+          <dd class="col-sm-9">{{subtarea.name}}</dd>
+          <dt class="col-sm-3">Inicio:</dt>
+          <dd class="col-sm-9">{{subtarea.start|date("d/m/Y H:s")}}</dd>
+          <dt class="col-sm-3">Fin:</dt>
+          <dd class="col-sm-9">{{subtarea.endtime|date("d/m/Y H:s")}}</dd>
+        </dl>
+        {% endfor %}
+        {% else %}
+        No hay subtareas.
+        {% endif %}
       </div>
     </div>
   </div>

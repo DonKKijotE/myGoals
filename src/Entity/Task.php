@@ -43,11 +43,16 @@ class Task
     /**
      * @var Collection<int, SubTask>
      */
-    #[ORM\OneToMany(targetEntity: SubTask::class, mappedBy: 'maintask', cascade: ['persist'])]
+    #[ORM\OneToMany(targetEntity: SubTask::class, mappedBy: 'maintask', cascade: ['persist','remove'])]
     private Collection $subTasks;
 
     #[ORM\Column]
-    private ?bool $status = null;
+    private ?bool $status = false;
+
+    public function __construct()
+    {
+        $this->status = false;
+    }
 
     public function __construct()
     {
@@ -190,10 +195,9 @@ class Task
         return $this->status;
     }
 
-    public function setStatus(bool $status): static
+    public function setStatus(?bool $status): self
     {
-        $this->status = $status;
-
+        $this->status = $status ?? false;
         return $this;
     }
 }
