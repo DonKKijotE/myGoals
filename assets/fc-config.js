@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     select: function(info){
 
-      console.log(info);
+      //console.log(info);
       const crearEvento = new bootstrap.Modal(document.getElementById("crearEvento"));
       var inicio = new Date(info.startStr);
       inicio.setMinutes(inicio.getMinutes() - inicio.getTimezoneOffset());

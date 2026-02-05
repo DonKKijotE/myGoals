@@ -75,111 +75,6 @@ class GoalController extends AbstractController
         ]);
     }
 
-    #[Route('/get-events', name: 'get_events')]
-    public function privateGetEvents(Request $request, EntityManagerInterface $entityManager): JsonResponse
-    {
-
-    $user = $this->getUser();
-
-    $events = $entityManager->getRepository(Task::class)->findBy(
-    ['owner' => $user],
-    ['start' => 'ASC']
-    );
-
-
-
-    if (!$events) {
-        throw $this->createNotFoundException(
-            'No events found for user '.$user->getEmail()
-       );
-    }
-
-    $eventCollection = array();
-
-    foreach($events as $item) {
-
-        $start=date_format($item->getStart(), 'Y-m-d H:i:s');
-        $end=date_format($item->getEndtime(), 'Y-m-d H:i:s');
-
-         $eventCollection[] = array(
-             'id' => $item->getId(),
-             'title' => $item->getName(),
-             'description' => $item->getDescription(),
-             'category' => $item->getCategory(),
-             'start' => $start,
-             'end' => $end,
-             'status' => $item->isStatus(),
-             // ... Same for each property you want
-         );
-    }
-
-    return new JsonResponse($eventCollection);
-
-    }
-
-    #[Route('/set-event-status/{id}', name: 'set_event_status')]
-    public function privateSetEventStatus(Request $request, EntityManagerInterface $entityManager, int $id): JsonResponse
-    {
-
-        // Meter un voter para que cada uno solo toque lo suyo.
-
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
-
-        $event = $entityManager->getRepository(Task::class)->find($id);
-
-        if (!$event) {
-          throw $this->createNotFoundException('No task found for id '.$id);
-        }
-
-        if($event->isStatus() == 0) {
-          $event->setStatus(1);
-          $marker = 1;
-        }
-        else{
-          $event->setStatus(0);
-          $marker = 0;
-            }
-
-        $entityManager->flush();
-
-        $response = array(
-          'task' => $event->getId(),
-          'status' => $marker,
-          'success' => true,
-        );
-
-        return new JsonResponse($response);
-
-
-    }
-
-    #[Route('/delete-event/{id}', name: 'delete_event')]
-    public function privateDeleteEvent(Request $request, EntityManagerInterface $entityManager, int $id): JsonResponse
-    {
-
-        // Meter un voter para que cada uno solo toque lo suyo.
-
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
-
-        $event = $entityManager->getRepository(Task::class)->find($id);
-
-        if (!$event) {
-          throw $this->createNotFoundException('No task found for id '.$id);
-        }
-
-        $entityManager->remove($event);
-        $entityManager->flush();
-
-        $response = array(
-          'task' => $event->getId(),
-          'success' => true,
-        );
-
-        return new JsonResponse($response);
-
-
-    }
-
 
     #[Route('/current', name: 'frontpage_currentweek')]
     public function publicCurrentWeek(Request $request, EntityManagerInterface $entityManager): Response
@@ -253,6 +148,7 @@ class GoalController extends AbstractController
 
         // Evitamos división por cero
         $porcentajeHechos = $totalEventos > 0 ? ($hechos / $totalEventos) * 100 : 0;
+        $porcentajeHechos = round($porcentajeHechos, 2);
 
 
         //return new JsonResponse($eventCollection);
@@ -268,6 +164,50 @@ class GoalController extends AbstractController
 
 
     }
+
+    #[Route('/event/{id}', name: 'view_event')]
+    public function viewEvent(Request $request, EntityManagerInterface $entityManager, int $id): Response
+    {
+
+      $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+      $event = $entityManager->getRepository(Task::class)->find($id);
+
+      if (!$event) {
+        throw $this->createNotFoundException('No task found for id '.$id);
+      }
+
+      $estadoTarea = $event->isStatus();
+      $subTareas = $event->getSubTasks();
+      $totalSubTareas = count($subTareas);
+      $subTareasHechas = 0;
+
+      foreach ($subTareas as $subTarea) {
+          if ($subTarea->isStatus()) {
+              $subTareasHechas++;
+          }
+      }
+
+      // porcentaje basado en subtareas
+      $porcentajeHechos = $totalSubTareas > 0
+          ? round(($subTareasHechas / $totalSubTareas) * 100, 2)
+          : 0;
+
+      // si la tarea principal ya está completa, fuerza 100%
+      if ($event->isStatus() === true) {
+          $porcentajeHechos = 100;
+      }
+
+
+
+
+      return $this->render('event.html.twig', [
+          'event' => $event,
+          'porcentajeHechos' => $porcentajeHechos,
+      ]);
+
+    }
+
 
 
 
