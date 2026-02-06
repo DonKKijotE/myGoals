@@ -65,8 +65,8 @@
 
 
 {% block body %}
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
+  <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+    <div class="container">
       <a class="navbar-brand" href="#">myGoals</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -106,9 +106,9 @@
 
       <div class="starter-template">
 
-      <h1>Progreso Semanal</h1>
+      <h1 class="text-center">Progreso Semanal</h1>
 
-      <h2><button type="button" class="btn btn-secondary"><i class="bi bi-rewind"></i></button> {{ fechainicio|date("d/m/Y") }} - {{ fechafin|date("d/m/Y") }} <button type="button" class="btn btn-secondary"><i class="bi bi-fast-forward"></i></button> </h2>
+      <h2 class="text-center"><button type="button" class="btn btn-secondary"><i class="bi bi-rewind"></i></button> {{ fechainicio|date("d/m/Y") }} - {{ fechafin|date("d/m/Y") }} <button type="button" class="btn btn-secondary"><i class="bi bi-fast-forward"></i></button> </h2>
 
         <br><br>
         <div class="progress mb-4" style="height: 30px; border-radius: 15px; overflow: hidden;">

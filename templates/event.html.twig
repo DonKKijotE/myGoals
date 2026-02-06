@@ -65,50 +65,66 @@
 
 
 {% block body %}
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">myGoals</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand" href="{{ path('frontpage') }}">myGoals</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <div class="d-flex flex-lg-row flex-column w-100 justify-content-between align-items-center">
+
+        <!-- Links a la izquierda -->
+        <ul class="navbar-nav mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Home</a>
+            <a class="nav-link" href="{{ path('frontpage_currentweek') }}">Calendario</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
+            <a class="nav-link" href="#">Pendiente</a>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Dropdown
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              Misc
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="#">Action</a></li>
-              <li><a class="dropdown-item" href="#">Another action</a></li>
+              <li><a class="dropdown-item" href="#">Crear Categoría</a></li>
+              <li><a class="dropdown-item" href="#">Otra Opción</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#">Something else here</a></li>
+              <li><a class="dropdown-item" href="#">Otra Opción</a></li>
             </ul>
           </li>
           <li class="nav-item">
             <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
           </li>
         </ul>
-        <form class="d-flex">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
+
+        <!-- Buscador centrado en lg, debajo en sm -->
+        <form class="d-flex my-2 my-lg-0 mx-lg-auto" style="max-width: 400px;">
+          <input class="form-control me-2" type="search" placeholder="Buscar" aria-label="Buscar">
+          <button class="btn btn-outline-success" type="submit">Buscar</button>
         </form>
+
+        <!-- Icono login/logout a la derecha -->
+        <div class="mt-2 mt-lg-0 ms-lg-3">
+          <i class="bi bi-sliders fs-4"></i>
+          <i class="bi bi-door-open fs-4"></i>
+        </div>
+
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
 
   <main role="main" class="container">
 
       <div class="starter-template">
 
-      <h1>Evento</h1>
+      <h1 class="text-center">Evento</h1>
 
-      <h1>{{event.name}}</h1>
+      <h1 class="text-center">{{event.name}}</h1>
 
       <br><br>
 
@@ -149,7 +165,7 @@
         });
         </script>
 
-        <h2 class="row text-start">Información Del Evento</h2>
+        <h2 class="row">Información Del Evento</h2>
         <br><br>
 
         <dl class="row text-start">
@@ -177,6 +193,8 @@
           <dd class="col-sm-10">{{subtarea.start|date("d/m/Y H:s")}}</dd>
           <dt class="col-sm-2">Fin:</dt>
           <dd class="col-sm-10">{{subtarea.endtime|date("d/m/Y H:s")}}</dd>
+          <dt class="col-sm-2">Descripción:</dt>
+          <dd class="col-sm-10">{{subtarea.description}}</dd>
           <dd class="col-sm-12">
           {% if subtarea.status == false %}
 

@@ -44,6 +44,9 @@ class AjaxController extends AbstractController
     public function privateGetEvents(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
 
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+
     $user = $this->getUser();
 
     $events = $entityManager->getRepository(Task::class)->findBy(
@@ -93,6 +96,11 @@ class AjaxController extends AbstractController
 
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
+        if (!$request->isXmlHttpRequest())
+        {
+          throw $this->createNotFoundException('This is not an AJAX request.');
+        }
+
         if($tipo == "task")
         {
           $event = $entityManager->getRepository(Task::class)->find($id);
@@ -120,7 +128,7 @@ class AjaxController extends AbstractController
 
         // si es subtask, comprobar si todas las subtasks de la task están hechas
         if ($tipo === "subtask") {
-            $task = $event->getMainTask(); // relación ManyToOne SubTask -> Task
+            $task = $event->getMainTask();
 
             $allHechas = true;
             foreach ($task->getSubTasks() as $st) {
@@ -130,10 +138,17 @@ class AjaxController extends AbstractController
                 }
             }
 
-            if ($allHechas) {
-                $task->setStatus(1);
+              if ($allHechas) {
+                  $task->setStatus(1);
+              }
+
+              if(!$allHechas && $task-> isStatus() === true)
+              {
+                $task->setStatus(false);
+              }
+
+
             }
-        }
 
 
         $entityManager->flush();
@@ -158,6 +173,11 @@ class AjaxController extends AbstractController
         // Meter un voter para que cada uno solo toque lo suyo.
 
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+        if (!$request->isXmlHttpRequest())
+        {
+          throw $this->createNotFoundException('This is not an AJAX request.');
+        }
 
         $event = $entityManager->getRepository(Task::class)->find($id);
 
