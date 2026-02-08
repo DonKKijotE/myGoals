@@ -71,7 +71,7 @@ div[id^="task_subtasks_"] {
   text-decoration: underline;
 }
 
-.navbar i.bi-door-open:hover {
+.navbar i.bi-box-arrow-in-left:hover {
   color: #dc3545;
   cursor: pointer;
   transform: scale(1.2);

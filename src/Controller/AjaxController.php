@@ -92,6 +92,9 @@ class AjaxController extends AbstractController
     public function privateSetEventStatus(Request $request, EntityManagerInterface $entityManager, string $tipo, int $id): JsonResponse
     {
 
+        // Si marcas una task como hecha marca todas las subtasks como hechas.
+        // Si marcas una subtask como hecha comprueba si todas las subtasks están hechas, entonces marca la task principal como hecha.
+
         // Meter un voter para que cada uno solo toque lo suyo.
 
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
@@ -126,11 +129,21 @@ class AjaxController extends AbstractController
           $marker = 0;
         }
 
-        // si es subtask, comprobar si todas las subtasks de la task están hechas
-        if ($tipo === "subtask") {
+        if($tipo === "task" )  //Si marcas la task como hecha marca todas las subtask como hechas.
+        {
+          $subtasks = $event->getSubTasks();
+          foreach ($subtasks as $st) {
+            $st->setStatus(true);
+          }
+
+        }
+
+
+        if ($tipo === "subtask") {  // si es subtask, comprobar si todas las subtasks de la task están hechas
             $task = $event->getMainTask();
 
             $allHechas = true;
+
             foreach ($task->getSubTasks() as $st) {
                 if (!$st->isStatus()) {
                     $allHechas = false;
@@ -148,7 +161,7 @@ class AjaxController extends AbstractController
               }
 
 
-            }
+          }
 
 
         $entityManager->flush();
