@@ -19,6 +19,7 @@ use App\Form\Type\TaskType;
 use App\Entity\User;
 use App\Entity\Task;
 use App\Entity\SubTask;
+use App\Entity\Category;
 
 use App\Repository\TaskRepository;
 
@@ -123,6 +124,7 @@ class GoalController extends AbstractController
 
         $eventCollection = [];
 
+
         foreach ($events as $item) {
             $eventCollection[] = [
                 'id' => $item->getId(),
@@ -135,6 +137,8 @@ class GoalController extends AbstractController
                 'subtasks' => $item->getSubTasks(),
             ];
         }
+
+        //dd($eventCollection);
 
         $totalEventos = count($eventCollection);
 

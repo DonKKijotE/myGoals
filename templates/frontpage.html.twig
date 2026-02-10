@@ -223,7 +223,7 @@
                 <br><br>
                 <dl class="row">
                   <dt class="col-sm-3">Categoría:</dt>
-                  <dd class="col-sm-9" id="tarea_cat">{{evento.category}}</dd>
+                  <dd class="col-sm-9" id="tarea_cat"><span style="color: {{evento.category.color}};";>&bull;</span> {{evento.category}}</dd>
                   <dt class="col-sm-3">Inicio:</dt>
                   <dd class="col-sm-9">{{evento.start|date("d/m/Y H:s")}}</dd>
                   <dt class="col-sm-3">Fin:</dt>

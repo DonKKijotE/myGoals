@@ -21,9 +21,6 @@ class Task
     #[ORM\Column(length: 600)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 50, nullable: true)]
-    private ?string $category = null;
-
     #[ORM\Column]
     private ?int $weektimes = null;
 
@@ -48,6 +45,10 @@ class Task
 
     #[ORM\Column]
     private ?bool $status = false;
+
+    #[ORM\ManyToOne(inversedBy: 'tasks')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Category $category = null;
 
     public function __construct()
     {
@@ -84,17 +85,7 @@ class Task
         return $this;
     }
 
-    public function getCategory(): ?string
-    {
-        return $this->category;
-    }
-
-    public function setCategory(?string $category): static
-    {
-        $this->category = $category;
-
-        return $this;
-    }
+    
 
     public function getWeektimes(): ?int
     {
@@ -194,6 +185,18 @@ class Task
     public function setStatus(?bool $status): self
     {
         $this->status = $status ?? false;
+        return $this;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): static
+    {
+        $this->category = $category;
+
         return $this;
     }
 }
