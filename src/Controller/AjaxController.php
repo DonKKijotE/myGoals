@@ -75,6 +75,8 @@ class AjaxController extends AbstractController
              'title' => $item->getName(),
              'description' => $item->getDescription(),
              'category' => $item->getCategory()->getName(),
+             'category_icon' => $item->getCategory()->getIcon(),
+             'category_color' => $item->getCategory()->getColor(),
              'start' => $start,
              'end' => $end,
              'status' => $item->isStatus(),
