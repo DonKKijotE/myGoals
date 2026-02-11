@@ -142,6 +142,56 @@ class GoalController extends AbstractController
 
         $totalEventos = count($eventCollection);
 
+        $categoriasData = [];
+
+        foreach ($eventCollection as $evento) {
+            $catName = $evento['category']->getName();
+
+            if (!isset($categoriasData[$catName])) {
+                $categoriasData[$catName] = [
+                    'nombre' => $catName,
+                    'total' => 0,
+                    'hechas' => 0,
+                ];
+            }
+
+            $categoriasData[$catName]['total']++;
+            if ($evento['status']) {
+                $categoriasData[$catName]['hechas']++;
+            }
+        }
+
+        // Calcular porcentaje interno y asignar clase
+        foreach ($categoriasData as $catName => $catData) {
+            $total = $catData['total'];
+            $hechas = $catData['hechas'];
+
+            $porcentajeGlobal = $totalEventos > 0 ? ($total / $totalEventos) * 100 : 0;
+            $porcentajeInterno = $total > 0 ? ($hechas / $total) * 100 : 0;
+
+            // Asignar color según horquillas idénticas a la barra principal
+            if ($porcentajeInterno <= 20) {
+                $colorClass = 'bg-danger';
+            } elseif ($porcentajeInterno <= 60) {
+                $colorClass = 'bg-warning';
+            } elseif ($porcentajeInterno < 100) {
+                $colorClass = 'bg-info';
+            } else {
+                $colorClass = 'bg-success';
+            }
+
+            $categoriasData[$catName]['porcentaje_global'] = round($porcentajeGlobal, 2);
+            $categoriasData[$catName]['porcentaje_interno'] = round($porcentajeInterno, 2);
+            $categoriasData[$catName]['color_class'] = $colorClass;
+        }
+
+        // Convertir a array indexado para Twig
+        $categoriasData = array_values($categoriasData);
+
+        //dd($categoriasData);
+
+        $totalEventos = count($eventCollection);
+
         $hechos = 0;
 
         foreach ($eventCollection as $evento) {
@@ -149,6 +199,8 @@ class GoalController extends AbstractController
                 $hechos++;
             }
         }
+
+
 
         // Evitamos división por cero
         $porcentajeHechos = $totalEventos > 0 ? ($hechos / $totalEventos) * 100 : 0;
@@ -159,6 +211,7 @@ class GoalController extends AbstractController
 
         return $this->render('frontpage.html.twig', [
             'events' => $eventCollection,
+            'categoriesData' => $categoriasData,
             'num_events' => $totalEventos,
             'eventos_hechos' => $hechos,
             'porcentajeHechos' => $porcentajeHechos,

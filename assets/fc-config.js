@@ -3,8 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridWeek',
     headerToolbar: {
-      left: '',
-      center: 'title',
+      left: 'title',
       right: 'today,dayGridMonth,dayGridWeek,dayGridDay,prev,next' // user can switch between the two
     },
     buttonText: {

@@ -100,3 +100,27 @@ div[id^="task_subtasks_"] {
 .navbar-toggler:not(.collapsed) {
   transform: rotate(90deg);
 }
+
+.progressBarVisual {
+    display: flex;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    height: 12px; /* altura de la barra segmentada */
+}
+
+.progressBarVisual .segment {
+    transition: width 3s ease-in-out;
+    border-right: 2px solid #fff !important; /* blanco */
+    box-sizing: border-box;
+
+}
+
+.progressBarVisual .segment span {
+    font-size: 10px;          /* pequeño para caber en segmentos delgados */
+    line-height: 12px;
+    white-space: nowrap;       /* evitar que el texto salte de línea */
+    overflow: hidden;          /* recorta el texto que no cabe */
+    text-overflow: ellipsis;   /* muestra “…” si es demasiado largo */
+    z-index: 1;                /* para que siempre quede por encima del div interno */
+}

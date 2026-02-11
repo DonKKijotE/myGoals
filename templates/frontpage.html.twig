@@ -127,17 +127,43 @@
       <h2 class="text-center"><button type="button" class="btn btn-secondary"><i class="bi bi-rewind"></i></button> {{ fechainicio|date("d/m/Y") }} - {{ fechafin|date("d/m/Y") }} <button type="button" class="btn btn-secondary"><i class="bi bi-fast-forward"></i></button> </h2>
 
         <br><br>
-        <div class="progress mb-4" style="height: 30px; border-radius: 15px; overflow: hidden;">
-            <div id="progressBar"
-                 class="progress-bar"
-                 role="progressbar"
-                 style="width: 0%; height: 30px; padding: 0;"
-                 aria-valuenow="{{ porcentajeHechos|round(0) }}"
-                 aria-valuemin="0"
-                 aria-valuemax="100">
-                0%
-            </div>
-        </div>
+
+        <dl class="row">
+          <dt class="col-2">
+              Global
+          </dt>
+          <dd class="col-10">
+          <div class="progress mb-4" style="height: 30px; border-radius: 15px; overflow: hidden;">
+              <div id="progressBar"
+                   class="progress-bar"
+                   role="progressbar"
+                   style="width: 0%; height: 30px; padding: 0;"
+                   aria-valuenow="{{ porcentajeHechos|round(0) }}"
+                   aria-valuemin="0"
+                   aria-valuemax="100">
+                  0%
+              </div>
+          </div>
+          </dd>
+          <dt class="col-2">
+            Categorías
+          </dt>
+          <dd class="col-sm-10">
+          <div class="progressBarVisual" style="height:12px;">
+              {% for cat in categoriesData %}
+                  <div class="segment {{ cat.color_class }}"
+                       data-width="{{ cat.porcentaje_global }}%"
+                       style="width:0%; position:relative; border-right:2px solid #fff; display:flex; align-items:center; justify-content:center;">
+
+                       <div style="width: {{ cat.porcentaje_interno }}%; height:100%; background: rgba(0,0,0,0.1); position:absolute; left:0; top:0;"></div>
+                       <span style="font-size:10px; line-height:12px; z-index:1;">{{ cat.nombre }}</span>
+                  </div>
+              {% endfor %}
+          </div>
+          </dd>
+
+        </dl>
+
         <script>
         document.addEventListener("DOMContentLoaded", () => {
             const progressBar = document.getElementById("progressBar");
@@ -161,6 +187,15 @@
                 progressBar.style.width = porcentaje + "%";
                 progressBar.textContent = porcentaje + "%";
             }, 50);
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll('.progressBarVisual .segment').forEach(segment => {
+                const targetWidth = segment.dataset.width; // tomar ancho final del dataset
+                setTimeout(() => {
+                    segment.style.width = targetWidth; // animar hasta el valor real
+                }, 50);
+            });
         });
         </script>
 
