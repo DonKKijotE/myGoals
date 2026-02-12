@@ -111,9 +111,15 @@ div[id^="task_subtasks_"] {
 
 .progressBarVisual .segment {
     transition: width 3s ease-in-out;
-    border-right: 2px solid #fff !important; /* blanco */
+    border-right: 2px solid #fff; /* blanco */
     box-sizing: border-box;
 
+}
+
+.segment:last-child {
+    transition: width 3s ease-in-out;
+    box-sizing: border-box;
+    border-right: 0px !important; /* blanco */
 }
 
 .progressBarVisual .segment span {
