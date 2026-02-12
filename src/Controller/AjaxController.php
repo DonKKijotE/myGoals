@@ -216,6 +216,53 @@ class AjaxController extends AbstractController
 
     }
 
+    #[Route('/get-events-date/{period}', name: 'get_events_date')]
+    public function privateGetEventsDate(Request $request, TaskRepository $taskRepository, string $period): JsonResponse
+    {
+
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+    //Empezamos probando sacando las tareas del mes.
+
+    $startOfPeriod = new \DateTime('first day of this month');
+    $endOfPeriod = new \DateTime('last day of this month');
+
+    $events = $taskRepository->findEventsForPeriod($startOfPeriod, $endOfPeriod);
+
+
+    if (!$events) {
+        throw $this->createNotFoundException(
+            'No events found for user '.$user->getEmail()
+       );
+    }
+
+    $eventCollection = array();
+
+    foreach($events as $item) {
+
+        $start=date_format($item->getStart(), 'Y-m-d H:i:s');
+        $end=date_format($item->getEndtime(), 'Y-m-d H:i:s');
+
+         $eventCollection[] = array(
+             'id' => $item->getId(),
+             'title' => $item->getName(),
+             'description' => $item->getDescription(),
+             'category' => $item->getCategory()->getName(),
+             'category_icon' => $item->getCategory()->getIcon(),
+             'category_color' => $item->getCategory()->getColor(),
+             'start' => $start,
+             'end' => $end,
+             'status' => $item->isStatus(),
+             // ... Same for each property you want
+         );
+    }
+
+    //dd($eventCollection);
+
+    return new JsonResponse($eventCollection);
+
+    }
+
 
 
 

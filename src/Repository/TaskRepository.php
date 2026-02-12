@@ -41,7 +41,7 @@ class TaskRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    /**
+/**
  * Obtiene todos los eventos que se solapan con una semana determinada.
  *
  * Lógica de filtrado:
@@ -70,4 +70,24 @@ class TaskRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /** Función para sacar los eventos de un periodo definido.
+    * @param \DateTimeInterface $periodStart Inicio del periodo
+    * @param \DateTimeInterface $periodEnd   Fin del periodo
+    * @return Event[] Lista de eventos del periodo
+    */
+
+       public function findEventsForPeriod(
+           \DateTimeInterface $startOfPeriod,
+           \DateTimeInterface $endOfPeriod
+       ): array {
+           return $this->createQueryBuilder('e')
+               ->where('e.start <= :periodEnd')
+               ->andWhere('e.endtime >= :periodStart')
+               ->setParameter('periodStart', $startOfPeriod)
+               ->setParameter('periodEnd', $endOfPeriod)
+               ->orderBy('e.start', 'ASC')
+               ->getQuery()
+               ->getResult();
+       }
 }
