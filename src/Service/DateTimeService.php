@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 
@@ -15,23 +16,27 @@ class DateTimeService
         $this->defaultTimezone = $defaultTimezone;
     }
 
-    // Convierte cualquier fecha del usuario a UTC antes de guardar
-    public function toUtc(DateTimeInterface $date, ?string $userTimezone = null): DateTime
+    public function toUserTime(DateTimeInterface $date, ?string $userTimezone = null): DateTimeImmutable
     {
         $tz = $userTimezone ?? $this->defaultTimezone;
-        $userTime = new DateTime($date->format('Y-m-d H:i:s'), new DateTimeZone($tz));
-        $userTime->setTimezone(new DateTimeZone('UTC'));
 
-        return $userTime;
+        // Si ya es DateTimeImmutable, solo cambia la TZ
+        if ($date instanceof \DateTimeImmutable) {
+            return $date->setTimezone(new \DateTimeZone($tz));
+        }
+
+        // Si es mutable, crea immutable y cambia TZ
+        return \DateTimeImmutable::createFromMutable($date)->setTimezone(new \DateTimeZone($tz));
     }
 
-    // Convierte UTC a la zona del usuario para mostrar
-    public function toUserTime(DateTimeInterface $date, ?string $userTimezone = null): DateTime
+    public function toUtc(DateTimeInterface $date, ?string $userTimezone = null): DateTimeImmutable
     {
         $tz = $userTimezone ?? $this->defaultTimezone;
-        $userTime = clone $date;
-        $userTime->setTimezone(new \DateTimeZone($tz));
 
-        return $userTime;
+        if ($date instanceof \DateTimeImmutable) {
+            return $date->setTimezone(new \DateTimeZone('UTC'));
+        }
+
+        return \DateTimeImmutable::createFromMutable($date)->setTimezone(new \DateTimeZone('UTC'));
     }
 }

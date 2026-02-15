@@ -28,12 +28,14 @@ class SubTaskType extends AbstractType
             ])
             ->add('start', DateTimeType::class, [
               'attr' => ['class' => 'form-control'],
-              'label' => 'Fecha Inicio'
+              'label' => 'Fecha Inicio',
+              'input' => 'datetime_immutable'
             ])
             ->add('endtime', DateTimeType::class, [
               'attr' => ['class' => 'form-control'],
               'label' => 'Fecha Fin',
               'required' => false,
+              'input' => 'datetime_immutable'
             ])
             //->add('save', SubmitType::class)
         ;

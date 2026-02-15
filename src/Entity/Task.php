@@ -32,10 +32,10 @@ class Task
     private ?User $owner = null;
 
     #[ORM\Column]
-    private ?\DateTime $start = null;
+    private ?\DateTimeImmutable $start = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTime $endtime = null;
+    #[ORM\Column(name: "endtime", type: "datetime_immutable", nullable: true)]
+    private ?\DateTimeImmutable $endTime = null;
 
     /**
      * @var Collection<int, SubTask>
@@ -85,7 +85,7 @@ class Task
         return $this;
     }
 
-    
+
 
     public function getWeektimes(): ?int
     {
@@ -123,27 +123,25 @@ class Task
         return $this;
     }
 
-    public function getStart(): ?\DateTime
+    public function getStart(): ?\DateTimeImmutable
     {
         return $this->start;
     }
 
-    public function setStart(\DateTime $start): static
+    public function setStart(\DateTimeInterface $start): self
     {
-        $this->start = $start;
-
+        $this->start = $start instanceof \DateTimeImmutable ? $start : \DateTimeImmutable::createFromMutable($start);
         return $this;
     }
 
-    public function getEndtime(): ?\DateTime
+    public function getEndtime(): ?\DateTimeImmutable
     {
-        return $this->endtime;
+        return $this->endTime;
     }
 
-    public function setEndtime(\DateTime $endtime): static
+    public function setEndTime(\DateTimeInterface $end): self
     {
-        $this->endtime = $endtime;
-
+        $this->endTime = $end instanceof \DateTimeImmutable ? $end : \DateTimeImmutable::createFromMutable($end);
         return $this;
     }
 

@@ -82,6 +82,8 @@ class GoalController extends AbstractController
               );
           }
 
+
+
           $task->setOwner($user);
           $entityManager->persist($task);
           $entityManager->flush();
@@ -229,22 +231,23 @@ class GoalController extends AbstractController
       }
 
       $userTimezone = $this->getUser()->getTimezone();
-      $start = $dateTimeService->toUserTime($event->getStart(), $userTimezone)->format('d/m/Y H:i');
-      $end   = $dateTimeService->toUserTime($event->getEndTime(), $userTimezone)->format('d/m/Y H:i');
+      $start = $dateTimeService->toUserTime($event->getStart(), $userTimezone);
+      $end   = $dateTimeService->toUserTime($event->getEndTime(), $userTimezone);
+
+
 
       $subtasksForTwig = [];
 
       foreach ($event->getSubTasks() as $sub) {
           $subtasksForTwig[] = [
               'entity' => $sub,
-              'start'  => $dateTimeService->toUserTime($sub->getStart(), $userTimezone)->format('d/m/Y H:i'),
-              'end'    => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone)->format('d/m/Y H:i'),
+              'start'  => $start,
+              'end'    => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone),
           ];
           //dump($sub->getStart(), $dateTimeService->toUserTime($sub->getStart(), $userTimezone));
       }
 
-      //dd($subtasksForTwig);
-
+      
       return $this->render('event.html.twig', [
           'event' => $event,
           'subtasks' => $subtasksForTwig,

@@ -29,8 +29,12 @@ class TaskType extends AbstractType
                   'class' => Category::class,
                   'choice_label' => 'name',
               ])
-            ->add('start', DateTimeType::class)
-            ->add('endtime', DateTimeType::class)
+            ->add('start', DateTimeType::class, [
+              'input' => 'datetime_immutable',
+            ])
+            ->add('endtime', DateTimeType::class, [
+              'input' => 'datetime_immutable',
+            ])
             ->add('weektimes', TextType::class)
             ->add('everyweek', ChoiceType::class, [
                 'choices'  => [
