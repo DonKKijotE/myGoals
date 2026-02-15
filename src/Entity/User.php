@@ -39,6 +39,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'owner')]
     private Collection $tasks;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $timezone = null;
+
     public function __construct()
     {
         $this->tasks = new ArrayCollection();
@@ -158,5 +161,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->subTasks;
     }
 
-    
+    public function getTimezone(): ?string
+    {
+        return $this->timezone ?? 'Atlantic/Canary';
+    }
+
+    public function setTimezone(?string $timezone): static
+    {
+        $this->timezone = $timezone;
+
+        return $this;
+    }
+
+
 }

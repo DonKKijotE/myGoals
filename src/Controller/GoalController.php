@@ -24,6 +24,7 @@ use App\Entity\Category;
 use App\Repository\TaskRepository;
 
 use App\Service\WeekService;
+use App\Service\DateTimeService;
 
 
 
@@ -37,48 +38,10 @@ class GoalController extends AbstractController
         $this->weekService = $weekService;
     }
 
-    #[Route('/home', name: 'dashboard')]
-    public function privateHome(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
-
-        $task = new Task();
-
-        $form = $this->createForm(TaskType::class, $task);
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-
-            $task = $form->getData();
-
-            // Setting datetime manually until datepicker is put into form.
-
-            $startdate = new \DateTime("2026-01-22 09:00:00");
-            $task->setStart($startdate);
-            $enddate = new \DateTime('2026-01-22 10:00:00');
-            $task->setEndTime($enddate);
-
-
-            $user = $this->getUser();
-            $task->setOwner($user);
-
-            $entityManager->persist($task);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('dashboard');
-        }
-
-
-
-        return $this->render('dashboard.html.twig', [
-            'form' => $form,
-        ]);
-    }
 
 
     #[Route('/current', name: 'frontpage_currentweek')]
-    public function publicCurrentWeek(Request $request, EntityManagerInterface $entityManager): Response
+    public function publicCurrentWeek(Request $request, EntityManagerInterface $entityManager, DateTimeService $dateTimeService): Response
     {
       $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
@@ -93,6 +56,32 @@ class GoalController extends AbstractController
           $task = $form->getData();
 
           $user = $this->getUser();
+
+          $userTimezone = $this->getUser()->getTimezone();
+
+
+          if ($task->getStart()) {
+            $task->setStart(
+                $dateTimeService->toUtc($task->getStart(), $userTimezone)
+            );
+          }
+
+          if ($task->getEndtime()) {
+              $task->setEndtime(
+                  $dateTimeService->toUtc($task->getEndtime(), $userTimezone)
+              );
+          }
+
+          foreach ($task->getSubtasks() as $subtask) {
+              $subtask->setStart(
+                  $dateTimeService->toUtc($subtask->getStart(), $userTimezone)
+              );
+
+              $subtask->setEndtime(
+                  $dateTimeService->toUtc($subtask->getEndTime(), $userTimezone)
+              );
+          }
+
           $task->setOwner($user);
           $entityManager->persist($task);
           $entityManager->flush();
@@ -100,68 +89,74 @@ class GoalController extends AbstractController
           return $this->redirectToRoute('frontpage_currentweek');
       }
 
-      //return $this->render('dashboard.html.twig');
-
       return $this->render('currentweek.html.twig', [
           'form' => $form,
       ]);
 
-
-
-      //return $this->render('currentweek.html.twig');
     }
 
+
     #[Route('/', name: 'frontpage')]
-    public function publicFrontpage(TaskRepository $taskRepository): Response
+    public function publicFrontpage(TaskRepository $taskRepository, DateTimeService $dateTimeService): Response
     {
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
-        $week = $this->weekService->getWeek(); // current week
-        $startOfWeek = $week['start']; // DateTime object
-        $endOfWeek = $week['end'];     // DateTime object
+        $user = $this->getUser();
+        $userTimezone = $user->getTimezone();
 
-        // Get all events overlapping with the week
-        $events = $taskRepository->findEventsForWeek($startOfWeek, $endOfWeek);
+        // --- Semana en zona del usuario ---
+        $weekUtc = $this->weekService->getWeek(null, 'UTC');
+        // En zona del user para mostrar en twig
+        $startUser = $weekUtc['start']->setTimezone(new \DateTimeZone($user->getTimezone()));
+        $endUser   = $weekUtc['end']->setTimezone(new \DateTimeZone($user->getTimezone()));
+
+        // --- Semana en UTC para DB ---
+        $startUtc = $dateTimeService->toUtc($startUser, $userTimezone);
+        $endUtc   = $dateTimeService->toUtc($endUser, $userTimezone);
+
+        //$events = $taskRepository->findEventsForWeek($startUtc, $endUtc, $user);
+        $events = $taskRepository->findAll();
 
         $eventCollection = [];
 
-
         foreach ($events as $item) {
+            $start = $dateTimeService->toUserTime($item->getStart(), $userTimezone)->format('Y-m-d H:i:s');
+            $end   = $dateTimeService->toUserTime($item->getEndTime(), $userTimezone)->format('Y-m-d H:i:s');
+
+            $subtasksForTwig = [];
+            foreach ($item->getSubTasks() as $sub) {
+                $subtasksForTwig[] = [
+                    'id' => $sub->getId(),
+                    'title' => $sub->getName(),
+                    'start' => $dateTimeService->toUserTime($sub->getStart(), $userTimezone)->format('Y-m-d H:i:s'),
+                    'end' => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone)->format('Y-m-d H:i:s'),
+                ];
+            }
+
             $eventCollection[] = [
                 'id' => $item->getId(),
                 'title' => $item->getName(),
                 'description' => $item->getDescription(),
                 'category' => $item->getCategory(),
-                'start' => $item->getStart()->format('Y-m-d H:i:s'),
-                'end' => $item->getEndTime()->format('Y-m-d H:i:s'),
+                'start' => $start,
+                'end' => $end,
                 'status' => $item->isStatus(),
-                'subtasks' => $item->getSubTasks(),
+                'subtasks' => $subtasksForTwig,
             ];
         }
 
-        //dd($eventCollection);
-
+        // --- Tus cálculos de categorías y porcentajes intactos ---
         $totalEventos = count($eventCollection);
-
         $categoriasData = [];
-
         foreach ($eventCollection as $evento) {
             $catName = $evento['category']->getName();
-
             if (!isset($categoriasData[$catName])) {
-                $categoriasData[$catName] = [
-                    'nombre' => $catName,
-                    'total' => 0,
-                    'hechas' => 0,
-                ];
+                $categoriasData[$catName] = ['nombre' => $catName, 'total' => 0, 'hechas' => 0];
             }
-
             $categoriasData[$catName]['total']++;
-            if ($evento['status']) {
-                $categoriasData[$catName]['hechas']++;
-            }
+            if ($evento['status']) $categoriasData[$catName]['hechas']++;
         }
 
-        // Calcular porcentaje interno y asignar clase
         foreach ($categoriasData as $catName => $catData) {
             $total = $catData['total'];
             $hechas = $catData['hechas'];
@@ -169,61 +164,39 @@ class GoalController extends AbstractController
             $porcentajeGlobal = $totalEventos > 0 ? ($total / $totalEventos) * 100 : 0;
             $porcentajeInterno = $total > 0 ? ($hechas / $total) * 100 : 0;
 
-            // Asignar color según horquillas idénticas a la barra principal
-            if ($porcentajeInterno <= 20) {
-                $colorClass = 'bg-danger';
-            } elseif ($porcentajeInterno <= 60) {
-                $colorClass = 'bg-warning';
-            } elseif ($porcentajeInterno < 100) {
-                $colorClass = 'bg-info';
-            } else {
-                $colorClass = 'bg-success';
-            }
+            if ($porcentajeInterno <= 20) $colorClass = 'bg-danger';
+            elseif ($porcentajeInterno <= 60) $colorClass = 'bg-warning';
+            elseif ($porcentajeInterno < 100) $colorClass = 'bg-info';
+            else $colorClass = 'bg-success';
 
             $categoriasData[$catName]['porcentaje_global'] = round($porcentajeGlobal, 2);
             $categoriasData[$catName]['porcentaje_interno'] = round($porcentajeInterno, 2);
             $categoriasData[$catName]['color_class'] = $colorClass;
         }
 
-        // Convertir a array indexado para Twig
         $categoriasData = array_values($categoriasData);
 
-        //dd($categoriasData);
-
-        $totalEventos = count($eventCollection);
-
         $hechos = 0;
-
         foreach ($eventCollection as $evento) {
-            if ($evento['status']) { // no isStatus(), es un array
-                $hechos++;
-            }
+            if ($evento['status']) $hechos++;
         }
-
-
-
-        // Evitamos división por cero
         $porcentajeHechos = $totalEventos > 0 ? ($hechos / $totalEventos) * 100 : 0;
         $porcentajeHechos = round($porcentajeHechos, 2);
 
-
-        //return new JsonResponse($eventCollection);
-
+        // --- Render Twig usando fechas en zona del usuario ---
         return $this->render('frontpage.html.twig', [
             'events' => $eventCollection,
             'categoriesData' => $categoriasData,
             'num_events' => $totalEventos,
             'eventos_hechos' => $hechos,
             'porcentajeHechos' => $porcentajeHechos,
-            'fechainicio' => $startOfWeek,
-            'fechafin' => $endOfWeek,
+            'fechainicio' => $startUser,
+            'fechafin' => $endUser,
         ]);
-
-
     }
 
     #[Route('/event/{id}', name: 'view_event')]
-    public function viewEvent(Request $request, EntityManagerInterface $entityManager, int $id): Response
+    public function viewEvent(Request $request, EntityManagerInterface $entityManager, DateTimeService $dateTimeService, int $id): Response
     {
 
       $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
@@ -255,11 +228,28 @@ class GoalController extends AbstractController
           $porcentajeHechos = 100;
       }
 
+      $userTimezone = $this->getUser()->getTimezone();
+      $start = $dateTimeService->toUserTime($event->getStart(), $userTimezone)->format('d/m/Y H:i');
+      $end   = $dateTimeService->toUserTime($event->getEndTime(), $userTimezone)->format('d/m/Y H:i');
 
+      $subtasksForTwig = [];
 
+      foreach ($event->getSubTasks() as $sub) {
+          $subtasksForTwig[] = [
+              'entity' => $sub,
+              'start'  => $dateTimeService->toUserTime($sub->getStart(), $userTimezone)->format('d/m/Y H:i'),
+              'end'    => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone)->format('d/m/Y H:i'),
+          ];
+          //dump($sub->getStart(), $dateTimeService->toUserTime($sub->getStart(), $userTimezone));
+      }
+
+      //dd($subtasksForTwig);
 
       return $this->render('event.html.twig', [
           'event' => $event,
+          'subtasks' => $subtasksForTwig,
+          'start' => $start,
+          'end' => $end,
           'porcentajeHechos' => $porcentajeHechos,
       ]);
 

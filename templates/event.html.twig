@@ -172,9 +172,9 @@
           <dt class="col-sm-2">Categoría:</dt>
           <dd class="col-sm-10" id="tarea_cat"><i class="{{event.category.icon}}" style="color: {{event.category.color}};"></i> {{event.category}}</dd>
           <dt class="col-sm-2">Inicio:</dt>
-          <dd class="col-sm-10">{{event.start|date("d/m/Y H:s")}}</dd>
+          <dd class="col-sm-10">{{start}}</dd>
           <dt class="col-sm-2">Fin:</dt>
-          <dd class="col-sm-10">{{event.endtime|date("d/m/Y H:s")}}</dd>
+          <dd class="col-sm-10">{{end}}</dd>
           <dt class="col-sm-2">Descripción:</dt>
           <dd class="col-sm-10">{{event.description}}</dd>
         </dl>
@@ -184,25 +184,25 @@
         <h2 class="row text-start">Subtareas</h2>
         <br><br>
 
-        {% if event.subtasks|length > 0 %}
-        {% for subtarea in event.subtasks %}
-        <dl class="row text-start">
+        {% if subtasks|length > 0 %}
+        {% for subtarea in subtasks %}
+          <dl class="row text-start">
           <dt class="col-sm-2">Tarea:</dt>
-          <dd class="col-sm-10">{{subtarea.name}}</dd>
+          <dd class="col-sm-10">{{subtarea.entity.name}}</dd>
           <dt class="col-sm-2">Inicio:</dt>
-          <dd class="col-sm-10">{{subtarea.start|date("d/m/Y H:s")}}</dd>
+          <dd class="col-sm-10">{{subtarea.start}}</dd>
           <dt class="col-sm-2">Fin:</dt>
-          <dd class="col-sm-10">{{subtarea.endtime|date("d/m/Y H:s")}}</dd>
+          <dd class="col-sm-10">{{subtarea.end}}</dd>
           <dt class="col-sm-2">Descripción:</dt>
-          <dd class="col-sm-10">{{subtarea.description}}</dd>
+          <dd class="col-sm-10">{{subtarea.entity.description}}</dd>
           <dd class="col-sm-12">
-          {% if subtarea.status == false %}
+          {% if subtarea.entity.status == false %}
 
-          <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-event-type="subtask" data-event-id="{{ subtarea.id }}">
+          <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
               <i class="bi bi-check-circle"></i>
           </button>
           {% else %}
-          <button type="button" class="btn btn-warning btn-sm estado" title="Cambiar Estado" data-event-type="subtask" data-event-id="{{ subtarea.id }}">
+          <button type="button" class="btn btn-warning btn-sm estado" title="Cambiar Estado" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
               <i class="bi bi-x-circle"></i>
           </button>
           {% endif %}
@@ -214,7 +214,7 @@
         {% endif %}
         </p>
 
-
+        
 
 
       </div>

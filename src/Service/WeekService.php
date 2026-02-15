@@ -12,21 +12,27 @@ class WeekService
      * @param \DateTimeInterface|null $date If not provided, uses current date
      * @return array ['start' => \DateTime, 'end' => \DateTime]
      */
-    public function getWeek(\DateTimeInterface $date = null): array
-    {
-        $today = $date ? clone $date : new \DateTimeImmutable();
+     public function getWeek(
+          \DateTimeInterface $date = null,
+          string $timezone = 'UTC'
+      ): array {
+          $tz = new \DateTimeZone($timezone);
 
-        $start = (clone $today)
-            ->modify('monday this week')
-            ->setTime(0, 0, 0);
+          $today = $date
+              ? new \DateTimeImmutable($date->format('Y-m-d H:i:s'), $tz)
+              : new \DateTimeImmutable('now', $tz);
 
-        $end = (clone $start)
-            ->modify('sunday this week')
-            ->setTime(23, 59, 59);
+          $start = $today
+              ->modify('monday this week')
+              ->setTime(0, 0, 0);
 
-        return [
-            'start' => $start,
-            'end' => $end,
-        ];
-    }
+          $end = $start
+              ->modify('sunday this week')
+              ->setTime(23, 59, 59);
+
+          return [
+              'start' => $start,
+              'end' => $end,
+          ];
+      }
 }

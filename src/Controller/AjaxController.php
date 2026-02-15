@@ -25,6 +25,7 @@ use App\Repository\TaskRepository;
 use App\Repository\SubTaskRepository;
 
 use App\Service\WeekService;
+use App\Service\DateTimeService;
 
 
 
@@ -42,7 +43,7 @@ class AjaxController extends AbstractController
     //Endpoint para obtener eventos -> Maquearlo para ver si saca tasks y/o subtasks
 
     #[Route('/get-events', name: 'get_events')]
-    public function privateGetEvents(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function privateGetEvents(Request $request, EntityManagerInterface $entityManager, DateTimeService $dateTimeService): JsonResponse
     {
 
     $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
@@ -56,19 +57,31 @@ class AjaxController extends AbstractController
     );
 
 
-
     if (!$events) {
         throw $this->createNotFoundException(
             'No events found for user '.$user->getEmail()
        );
     }
 
-    $eventCollection = array();
+    $eventCollection = [];
+
 
     foreach($events as $item) {
 
-        $start=date_format($item->getStart(), 'Y-m-d H:i:s');
-        $end=date_format($item->getEndtime(), 'Y-m-d H:i:s');
+        $userTimezone = $this->getUser()->getTimezone();
+        $start = $dateTimeService->toUserTime($item->getStart(), $userTimezone)->format('Y-m-d H:i:s');
+        $end   = $dateTimeService->toUserTime($item->getEndTime(), $userTimezone)->format('Y-m-d H:i:s');
+
+        $subtasksForTwig = [];
+
+        foreach ($item->getSubTasks() as $sub) {
+            $subtasksForTwig[] = [
+                'id' => $sub->getId(),
+                'title' => $sub->getName(),
+                'start' => $dateTimeService->toUserTime($sub->getStart(), $userTimezone)->format('Y-m-d H:i:s'),
+                'end' => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone)->format('Y-m-d H:i:s'),
+            ];
+        }
 
          $eventCollection[] = array(
              'id' => $item->getId(),
@@ -80,11 +93,10 @@ class AjaxController extends AbstractController
              'start' => $start,
              'end' => $end,
              'status' => $item->isStatus(),
-             // ... Same for each property you want
+             'subtasks' => $subtasksForTwig,
+
          );
     }
-
-    //dd($eventCollection);
 
     return new JsonResponse($eventCollection);
 
@@ -240,8 +252,9 @@ class AjaxController extends AbstractController
 
     foreach($events as $item) {
 
-        $start=date_format($item->getStart(), 'Y-m-d H:i:s');
-        $end=date_format($item->getEndtime(), 'Y-m-d H:i:s');
+        $userTimezone = $this->getUser()->getTimezone();
+        $start = $dateTimeService->toUserTime($item->getStart(), $userTimezone);
+        $end   = $dateTimeService->toUserTime($item->getEndTime(), $userTimezone);
 
          $eventCollection[] = array(
              'id' => $item->getId(),
@@ -257,12 +270,54 @@ class AjaxController extends AbstractController
          );
     }
 
-    //dd($eventCollection);
-
     return new JsonResponse($eventCollection);
 
     }
 
+    #[Route('/test', name: 'get_events_date')]
+    public function privateTest(Request $request, TaskRepository $taskRepository, DateTimeService $dateTimeService): JsonResponse
+    {
+
+      $user = $this->getUser();
+      $events = $taskRepository->findEventsByUser($user);
+      $userTimezone = $this->getUser()->getTimezone();
+
+      $eventCollection = array_map(
+          fn($event) => [
+              'id' => $event->getId(),
+              'title' => $event->getName(),
+              'description' => $event->getDescription(),
+              'category' => $event->getCategory()->getName(),
+              'category_icon' => $event->getCategory()->getIcon(),
+              'category_color' => $event->getCategory()->getColor(),
+              'start' => $dateTimeService
+                  ->toUserTime($event->getStart(), $userTimezone)
+                  ->format('Y-m-d H:i:s'),
+              'end' => $dateTimeService
+                  ->toUserTime($event->getEndTime(), $userTimezone)
+                  ->format('Y-m-d H:i:s'),
+              'status' => $event->isStatus(),
+              'subtasks' => array_map(
+                  fn($sub) => [
+                      'id' => $sub->getId(),
+                      'title' => $sub->getName(),
+                      'start' => $dateTimeService
+                          ->toUserTime($sub->getStart(), $userTimezone)
+                          ->format('Y-m-d H:i:s'),
+                      'end' => $dateTimeService
+                          ->toUserTime($sub->getEndTime(), $userTimezone)
+                          ->format('Y-m-d H:i:s'),
+                      'status' => $sub->isStatus(),
+                  ],
+                  $event->getSubTasks()->toArray() // convierte la colección Doctrine a array
+              ),
+          ],
+          $events // este es tu array de eventos, puede tener cualquier número de elementos
+      );
+
+      return new JsonResponse($eventCollection);
+
+    }
 
 
 

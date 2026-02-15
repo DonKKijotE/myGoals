@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Task;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -41,53 +42,77 @@ class TaskRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-/**
- * Obtiene todos los eventos que se solapan con una semana determinada.
- *
- * Lógica de filtrado:
- * - e.start >= :weekStart AND e.endTime <= :weekEnd
- *      → Solo eventos que empiezan y terminan completamente dentro de la semana.
- * - e.start <= :weekEnd AND e.endTime >= :weekStart
- *      → Todos los eventos que tengan algún día dentro de la semana, incluso si empiezan antes o terminan después.
- *
- * Se usa la segunda opción para incluir eventos de varios días.
- *
- * @param \DateTimeInterface $weekStart Inicio de la semana
- * @param \DateTimeInterface $weekEnd   Fin de la semana
- * @return Event[] Lista de eventos de la semana
- */
-
-    public function findEventsForWeek(
-        \DateTimeInterface $startOfWeek,
-        \DateTimeInterface $endOfWeek
-    ): array {
-        return $this->createQueryBuilder('e')
-            ->where('e.start <= :weekEnd')
-            ->andWhere('e.endtime >= :weekStart')
-            ->setParameter('weekStart', $startOfWeek)
-            ->setParameter('weekEnd', $endOfWeek)
-            ->orderBy('e.start', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /** Función para sacar los eventos de un periodo definido.
-    * @param \DateTimeInterface $periodStart Inicio del periodo
-    * @param \DateTimeInterface $periodEnd   Fin del periodo
-    * @return Event[] Lista de eventos del periodo
+    /*  Obtiene todos los eventos de un user concreto
+        Luego habrá que modificarlo si los users pueden
+        compartir eventos .
+    * @param \DateTimeInterface $weekStart Inicio de la semana
+    * @param \DateTimeInterface $weekEnd   Fin de la semana
+    * @return Event[] Lista de eventos de la semana
     */
 
-       public function findEventsForPeriod(
-           \DateTimeInterface $startOfPeriod,
-           \DateTimeInterface $endOfPeriod
-       ): array {
-           return $this->createQueryBuilder('e')
-               ->where('e.start <= :periodEnd')
-               ->andWhere('e.endtime >= :periodStart')
-               ->setParameter('periodStart', $startOfPeriod)
-               ->setParameter('periodEnd', $endOfPeriod)
-               ->orderBy('e.start', 'ASC')
-               ->getQuery()
-               ->getResult();
-       }
-}
+    public function findEventsByUser(User $user): array {
+
+      return $this->createQueryBuilder('e')
+          ->where('e.owner = :user')
+          ->setParameter('user', $user)
+          ->orderBy('e.start', 'ASC')
+          ->getQuery()
+          ->getResult();
+
+      }
+
+
+
+  /**
+   * Obtiene todos los eventos que se solapan con una semana determinada.
+   *
+   * Lógica de filtrado:
+   * - e.start >= :weekStart AND e.endTime <= :weekEnd
+   *      → Solo eventos que empiezan y terminan completamente dentro de la semana.
+   * - e.start <= :weekEnd AND e.endTime >= :weekStart
+   *      → Todos los eventos que tengan algún día dentro de la semana, incluso si empiezan antes o terminan después.
+   *
+   * Se usa la segunda opción para incluir eventos de varios días.
+   *
+   * @param \DateTimeInterface $weekStart Inicio de la semana
+   * @param \DateTimeInterface $weekEnd   Fin de la semana
+   * @return Event[] Lista de eventos de la semana
+   */
+
+      public function findEventsForWeek(
+          \DateTimeInterface $startOfWeek,
+          \DateTimeInterface $endOfWeek,
+          User $user,
+      ): array {
+          return $this->createQueryBuilder('e')
+              ->where('e.owner = :user')
+              ->andWhere('e.start <= :weekEnd')
+              ->andWhere('e.endtime >= :weekStart')
+              ->setParameter('user', $user)
+              ->setParameter('weekStart', $startOfWeek)
+              ->setParameter('weekEnd', $endOfWeek)
+              ->orderBy('e.start', 'ASC')
+              ->getQuery()
+              ->getResult();
+      }
+
+      /** Función para sacar los eventos de un periodo definido.
+      * @param \DateTimeInterface $periodStart Inicio del periodo
+      * @param \DateTimeInterface $periodEnd   Fin del periodo
+      * @return Event[] Lista de eventos del periodo
+      */
+
+         public function findEventsForPeriod(
+             \DateTimeInterface $startOfPeriod,
+             \DateTimeInterface $endOfPeriod
+         ): array {
+             return $this->createQueryBuilder('e')
+                 ->where('e.start <= :periodEnd')
+                 ->andWhere('e.endtime >= :periodStart')
+                 ->setParameter('periodStart', $startOfPeriod)
+                 ->setParameter('periodEnd', $endOfPeriod)
+                 ->orderBy('e.start', 'ASC')
+                 ->getQuery()
+                 ->getResult();
+         }
+  }

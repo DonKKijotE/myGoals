@@ -260,9 +260,9 @@
                   <dt class="col-sm-3">Categoría:</dt>
                   <dd class="col-sm-9" id="tarea_cat"><i class="{{evento.category.icon}}" style="color: {{evento.category.color}}"></i> {{evento.category.name}}</dd>
                   <dt class="col-sm-3">Inicio:</dt>
-                  <dd class="col-sm-9">{{evento.start|date("d/m/Y H:s")}}</dd>
+                  <dd class="col-sm-9">{{evento.start|date("d/m/Y H:i")}}</dd>
                   <dt class="col-sm-3">Fin:</dt>
-                  <dd class="col-sm-9">{{evento.end|date("d/m/Y H:s")}}</dd>
+                  <dd class="col-sm-9">{{evento.end|date("d/m/Y H:i")}}</dd>
                 </dl>
                 <h5 class="modal-title">Subtareas</h5>
                 <br>
@@ -270,11 +270,11 @@
                 {% for subtarea in evento.subtasks %}
                 <dl class="row">
                   <dt class="col-sm-3">Tarea:</dt>
-                  <dd class="col-sm-9">{{subtarea.name}}</dd>
+                  <dd class="col-sm-9">{{subtarea.title}}</dd>
                   <dt class="col-sm-3">Inicio:</dt>
-                  <dd class="col-sm-9">{{subtarea.start|date("d/m/Y H:s")}}</dd>
+                  <dd class="col-sm-9">{{subtarea.start|date("d/m/Y H:i")}}</dd>
                   <dt class="col-sm-3">Fin:</dt>
-                  <dd class="col-sm-9">{{subtarea.endtime|date("d/m/Y H:s")}}</dd>
+                  <dd class="col-sm-9">{{subtarea.end|date("d/m/Y H:i")}}</dd>
                 </dl>
                 {% endfor %}
                 {% else %}

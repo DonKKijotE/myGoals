@@ -29,6 +29,7 @@ class AppFixtures extends Fixture
         $user->setRoles($roles);
         $password = $this->hasher->hashPassword($user, '12345');
         $user->setPassword($password);
+        $user->setTimezone('Europe/Berlin');
 
         $manager->persist($user);
 
@@ -42,6 +43,7 @@ class AppFixtures extends Fixture
         $user->setRoles($roles);
         $password = $this->hasher->hashPassword($user, '12345');
         $user->setPassword($password);
+        $user->setTimezone('Atlantic/Canary');
 
         $manager->persist($user);
 
