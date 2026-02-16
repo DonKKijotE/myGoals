@@ -82,8 +82,6 @@ class GoalController extends AbstractController
               );
           }
 
-
-
           $task->setOwner($user);
           $entityManager->persist($task);
           $entityManager->flush();
@@ -116,22 +114,22 @@ class GoalController extends AbstractController
         $startUtc = $dateTimeService->toUtc($startUser, $userTimezone);
         $endUtc   = $dateTimeService->toUtc($endUser, $userTimezone);
 
-        //$events = $taskRepository->findEventsForWeek($startUtc, $endUtc, $user);
-        $events = $taskRepository->findAll();
+        $events = $taskRepository->findEventsForWeek($startUtc, $endUtc, $user);
+        //$events = $taskRepository->findAll();
 
         $eventCollection = [];
 
         foreach ($events as $item) {
-            $start = $dateTimeService->toUserTime($item->getStart(), $userTimezone)->format('Y-m-d H:i:s');
-            $end   = $dateTimeService->toUserTime($item->getEndTime(), $userTimezone)->format('Y-m-d H:i:s');
+            $start = $dateTimeService->toUserTime($item->getStart(), $userTimezone);
+            $end   = $dateTimeService->toUserTime($item->getEndTime(), $userTimezone);
 
             $subtasksForTwig = [];
             foreach ($item->getSubTasks() as $sub) {
                 $subtasksForTwig[] = [
                     'id' => $sub->getId(),
                     'title' => $sub->getName(),
-                    'start' => $dateTimeService->toUserTime($sub->getStart(), $userTimezone)->format('Y-m-d H:i:s'),
-                    'end' => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone)->format('Y-m-d H:i:s'),
+                    'start' => $dateTimeService->toUserTime($sub->getStart(), $userTimezone),
+                    'end' => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone),
                 ];
             }
 
@@ -241,13 +239,13 @@ class GoalController extends AbstractController
       foreach ($event->getSubTasks() as $sub) {
           $subtasksForTwig[] = [
               'entity' => $sub,
-              'start'  => $start,
+              'start'  => $dateTimeService->toUserTime($sub->getStart(), $userTimezone),
               'end'    => $dateTimeService->toUserTime($sub->getEndTime(), $userTimezone),
           ];
           //dump($sub->getStart(), $dateTimeService->toUserTime($sub->getStart(), $userTimezone));
       }
 
-      
+
       return $this->render('event.html.twig', [
           'event' => $event,
           'subtasks' => $subtasksForTwig,

@@ -174,7 +174,7 @@
           <dt class="col-sm-2">Inicio:</dt>
           <dd class="col-sm-10">{{ start|date("d/m/Y H:i", app.user.timezone) }}</dd>
           <dt class="col-sm-2">Fin:</dt>
-          <dd class="col-sm-10">{{end|date("d/m/Y H:i")}}</dd>
+          <dd class="col-sm-10">{{end|date("d/m/Y H:i", app.user.timezone)}}</dd>
           <dt class="col-sm-2">Descripción:</dt>
           <dd class="col-sm-10">{{event.description}}</dd>
         </dl>
@@ -190,9 +190,9 @@
           <dt class="col-sm-2">Tarea:</dt>
           <dd class="col-sm-10">{{subtarea.entity.name}}</dd>
           <dt class="col-sm-2">Inicio:</dt>
-          <dd class="col-sm-10">{{subtarea.start|date("d/m/Y H:i")}}</dd>
+          <dd class="col-sm-10">{{subtarea.start|date("d/m/Y H:i", app.user.timezone)}}</dd>
           <dt class="col-sm-2">Fin:</dt>
-          <dd class="col-sm-10">{{subtarea.end|date("d/m/Y H:i")}}</dd>
+          <dd class="col-sm-10">{{subtarea.end|date("d/m/Y H:i", app.user.timezone)}}</dd>
           <dt class="col-sm-2">Descripción:</dt>
           <dd class="col-sm-10">{{subtarea.entity.description}}</dd>
           <dd class="col-sm-12">

@@ -87,7 +87,7 @@ class TaskRepository extends ServiceEntityRepository
           return $this->createQueryBuilder('e')
               ->where('e.owner = :user')
               ->andWhere('e.start <= :weekEnd')
-              ->andWhere('e.endtime >= :weekStart')
+              ->andWhere('e.endTime >= :weekStart')
               ->setParameter('user', $user)
               ->setParameter('weekStart', $startOfWeek)
               ->setParameter('weekEnd', $endOfWeek)
@@ -102,12 +102,14 @@ class TaskRepository extends ServiceEntityRepository
       * @return Event[] Lista de eventos del periodo
       */
 
-         public function findEventsForPeriod(
+         public function findUserEventsForPeriod(
              \DateTimeInterface $startOfPeriod,
-             \DateTimeInterface $endOfPeriod
+             \DateTimeInterface $endOfPeriod,
+             User $user,
          ): array {
              return $this->createQueryBuilder('e')
-                 ->where('e.start <= :periodEnd')
+                 ->where('e.owner = :user')
+                 ->andWhere('e.start <= :periodEnd')
                  ->andWhere('e.endtime >= :periodStart')
                  ->setParameter('periodStart', $startOfPeriod)
                  ->setParameter('periodEnd', $endOfPeriod)
