@@ -6,58 +6,127 @@
     {{ parent() }}
 
     <script>
-    $(document).on('click','.estado', function() {
+    function actualizarBarras(progress) {
+    // --- Barra global ---
+    const progressBar = document.getElementById("progressBar");
+    if (progressBar) {
+        const porcentaje = progress.global.percent;
 
+        progressBar.classList.remove('bg-danger','bg-warning','bg-info','bg-success');
+
+        if (porcentaje <= 20) progressBar.classList.add('bg-danger');
+        else if (porcentaje <= 60) progressBar.classList.add('bg-warning');
+        else if (porcentaje < 100) progressBar.classList.add('bg-info');
+        else progressBar.classList.add('bg-success');
+
+        progressBar.style.width = porcentaje + "%";
+        progressBar.textContent = porcentaje + "%";
+    }
+
+    // --- Barras por categoría ---
+    const container = document.querySelector('.progressBarVisual');
+    if (container) {
+        container.innerHTML = ''; // limpiar contenido anterior
+
+        progress.categories.forEach(cat => {
+            const segment = document.createElement('div');
+            segment.classList.add('segment', cat.color_class);
+            segment.style.width = '0%';
+            segment.style.position = 'relative';
+            segment.style.display = 'flex';
+            segment.style.alignItems = 'center';
+            segment.style.justifyContent = 'center';
+
+            // Barra interna (hechas)
+            const inner = document.createElement('div');
+            inner.style.width = cat.percent_interno + '%';
+            inner.style.height = '100%';
+            inner.style.background = 'rgba(0,0,0,0.1)';
+            inner.style.position = 'absolute';
+            inner.style.left = '0';
+            inner.style.top = '0';
+
+            // Nombre categoría
+            const span = document.createElement('span');
+            span.style.fontSize = '10px';
+            span.style.lineHeight = '12px';
+            span.style.zIndex = '1';
+            span.textContent = cat.name;
+
+            segment.appendChild(inner);
+            segment.appendChild(span);
+            container.appendChild(segment);
+
+            // Animación al ancho real
+            setTimeout(() => {
+                segment.style.width = cat.percent_global + '%';
+            }, 50);
+        });
+    }
+}
+
+// =======================
+// Función auxiliar para llamar al endpoint
+// =======================
+function actualizarBarrasAjax() {
+    $.getJSON('/get-progress', function(progress) {
+        actualizarBarras(progress);
+    });
+}
+
+// =======================
+// Cambiar estado de una tarea
+// =======================
+$(document).on('click','.estado', function() {
     const $btn = $(this);
     const eventType = $btn.attr('data-event-type');
     const eventId = $btn.attr('data-event-id');
 
-    // Construimos la URL usando el ID directamente
-
-    const url = `/set-event-status/${eventType}/${eventId}`;
-
-       $.ajax({
-          type: "POST",
-          url: url,
-          success: function(response) {
-
-          location.reload();
-
+    $.ajax({
+        type: "POST",
+        url: `/set-event-status/${eventType}/${eventId}`,
+        success: function(response) {
+            // Actualizamos barras
+            actualizarBarrasAjax();
         }
-        });
     });
+});
 
-    // Cuando pinchas en el botón del evento para abrir el dialog de eliminar
-
-    $(document).on('click','.eliminar', function() {
-
+// =======================
+// Abrir modal de eliminación
+// =======================
+$(document).on('click','.eliminar', function() {
     const $btn = $(this);
     const eliminarId = $btn.attr('data-event-id');
-    const cambiarEstado = document.getElementById("boton_eliminar");
-    $(cambiarEstado).attr('data-event-id', eliminarId);
+    $('#boton_eliminar').attr('data-event-id', eliminarId);
+});
 
-    });
-
-    // Cuando pinchas en el botón para eliminar definitivamente
-
-    $(document).on('click','#boton_eliminar', function() {
-
+// =======================
+// Eliminar tarea
+// =======================
+$(document).on('click','#boton_eliminar', function() {
     const $btn = $(this);
     const eventId = $btn.attr('data-event-id');
 
-    // Construimos la URL usando el ID directamente
-    const url = `/delete-event/${eventId}`;
-
-       $.ajax({
-          type: "POST",
-          url: url,
-          success: function(response) {
-
-          location.reload();
-
+    $.ajax({
+        type: "POST",
+        url: `/delete-event/${eventId}`,
+        success: function(response) {
+            // Quitar del DOM la tarea eliminada
+            $(`#event-${eventId}`).remove();
+            $('#modalEliminar').modal('hide');
+            // Actualizamos barras
+            actualizarBarrasAjax();
         }
-        });
     });
+});
+
+// =======================
+// Inicialización al cargar la página
+// =======================
+$(document).ready(function() {
+    actualizarBarrasAjax(); // Cargar barras según datos iniciales
+});
     </script>
 
 {% endblock %}
@@ -201,11 +270,11 @@
 
 
         {% for fila in events|batch(4, null) %}
-            <div class="row mb-4">
+            <div class="row mb-4 mb-4 justify-content-start">
                 {% for evento in fila %}
                     {% if evento %}
                         <div class="col-12 col-sm-6 col-md-3">
-                            <div class="card h-100">
+                            <div class="card h-100" id="event-{{ evento.id }}">
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">{{ evento.title }}</h5>
 

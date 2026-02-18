@@ -26,6 +26,7 @@ use App\Repository\SubTaskRepository;
 
 use App\Service\WeekService;
 use App\Service\DateTimeService;
+use App\Service\ProgressService;
 
 
 
@@ -319,7 +320,25 @@ class AjaxController extends AbstractController
 
     }
 
+    #[Route('/get-progress', name: 'get_progress')]
+    public function getProgress(
+        ProgressService $progressService,
+        TaskRepository $taskRepository,
+        DateTimeService $dateTimeService
+    ): JsonResponse {
+        $user = $this->getUser();
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
+        // Semana en UTC para DB
+        $weekUtc = $this->weekService->getWeek(null, 'UTC');
+        $startUtc = $weekUtc['start'];
+        $endUtc   = $weekUtc['end'];
+
+        // Llamamos al servicio para calcular porcentajes
+        $progress = $progressService->getProgressForPeriod($user, $startUtc, $endUtc);
+
+        return new JsonResponse($progress);
+    }
 
 
 

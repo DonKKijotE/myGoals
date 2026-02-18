@@ -110,9 +110,10 @@ class TaskRepository extends ServiceEntityRepository
              return $this->createQueryBuilder('e')
                  ->where('e.owner = :user')
                  ->andWhere('e.start <= :periodEnd')
-                 ->andWhere('e.endtime >= :periodStart')
+                 ->andWhere('e.endTime >= :periodStart')
                  ->setParameter('periodStart', $startOfPeriod)
                  ->setParameter('periodEnd', $endOfPeriod)
+                 ->setParameter('user', $user)
                  ->orderBy('e.start', 'ASC')
                  ->getQuery()
                  ->getResult();
