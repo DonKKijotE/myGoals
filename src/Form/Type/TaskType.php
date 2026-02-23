@@ -35,13 +35,6 @@ class TaskType extends AbstractType
             ->add('endtime', DateTimeType::class, [
               'input' => 'datetime_immutable',
             ])
-            ->add('weektimes', TextType::class)
-            ->add('everyweek', ChoiceType::class, [
-                'choices'  => [
-                    'Sí' => true,
-                    'No' => false
-                ],
-            ])
             ->add('subtasks', CollectionType::class, [
                 'entry_type' => SubTaskType::class,
                 'label' => false,
