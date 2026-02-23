@@ -256,6 +256,17 @@ class GoalController extends AbstractController
 
     }
 
+    #[Route('/dummy', name: 'dummy_create_event')]
+    public function dummyCreateEvent(Request $request, EntityManagerInterface $entityManager, DateTimeService $dateTimeService): Response
+    {
+
+      $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
+
+
+      return $this->render('dummy.html.twig');
+
+    }
+
 
 
 

@@ -6,6 +6,7 @@ use App\Repository\TaskRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 class Task
@@ -20,12 +21,6 @@ class Task
 
     #[ORM\Column(length: 600)]
     private ?string $description = null;
-
-    #[ORM\Column]
-    private ?int $weektimes = null;
-
-    #[ORM\Column]
-    private ?int $everyweek = null;
 
     #[ORM\ManyToOne(inversedBy: 'tasks')]
     #[ORM\JoinColumn(nullable: false)]
@@ -49,6 +44,15 @@ class Task
     #[ORM\ManyToOne(inversedBy: 'tasks')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Category $category = null;
+
+    #[ORM\Column(type: 'uuid', nullable: true)]
+    private ?Uuid $recurrenceGroup = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $recurrenceType = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $recurrenceInterval = null;
 
     public function __construct()
     {
@@ -81,32 +85,6 @@ class Task
     public function setDescription(string $description): static
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-
-
-    public function getWeektimes(): ?int
-    {
-        return $this->weektimes;
-    }
-
-    public function setWeektimes(int $weektimes): static
-    {
-        $this->weektimes = $weektimes;
-
-        return $this;
-    }
-
-    public function getEveryweek(): ?int
-    {
-        return $this->everyweek;
-    }
-
-    public function setEveryweek(int $everyweek): static
-    {
-        $this->everyweek = $everyweek;
 
         return $this;
     }
@@ -194,6 +172,42 @@ class Task
     public function setCategory(?Category $category): static
     {
         $this->category = $category;
+
+        return $this;
+    }
+
+    public function getRecurrenceGroup(): ?Uuid
+    {
+        return $this->recurrenceGroup;
+    }
+
+    public function setRecurrenceGroup(?Uuid $recurrenceGroup): static
+    {
+        $this->recurrenceGroup = $recurrenceGroup;
+
+        return $this;
+    }
+
+    public function getRecurrenceType(): ?string
+    {
+        return $this->recurrenceType;
+    }
+
+    public function setRecurrenceType(?string $recurrenceType): static
+    {
+        $this->recurrenceType = $recurrenceType;
+
+        return $this;
+    }
+
+    public function getRecurrenceInterval(): ?string
+    {
+        return $this->recurrenceInterval;
+    }
+
+    public function setRecurrenceInterval(?string $recurrenceInterval): static
+    {
+        $this->recurrenceInterval = $recurrenceInterval;
 
         return $this;
     }

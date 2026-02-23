@@ -27,6 +27,7 @@ use App\Repository\SubTaskRepository;
 use App\Service\WeekService;
 use App\Service\DateTimeService;
 use App\Service\ProgressService;
+use App\Service\TaskCreationService;
 
 
 
@@ -340,6 +341,31 @@ class AjaxController extends AbstractController
         return new JsonResponse($progress);
     }
 
+    #[Route('/task-create', name: 'create_task', methods: ['POST'])]
+    public function create(Request $request, TaskCreationService $taskCreationService): JsonResponse
+    {
 
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data) {
+            return $this->json(['status' => 'error', 'message' => 'JSON inválido'], 400);
+        }
+
+        try {
+            // Aquí le pasamos el usuario actual
+            $task = $taskCreationService->createFromArray($data, $this->getUser());
+
+            return $this->json([
+                'status' => 'ok',
+                'id' => $task->getId(),
+                'recurrenceGroup' => $task->getRecurrenceGroup()?->toRfc4122()
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 }

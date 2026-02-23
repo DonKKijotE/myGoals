@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dummy Task Form</title>
+</head>
+<body>
+<h1>Crear tarea dummy</h1>
+<form id="dummyForm">
+    <!-- Task principal -->
+    <div>
+        <label>Título:</label>
+        <input type="text" name="title" />
+    </div>
+    <div>
+        <label>Descripción:</label>
+        <textarea name="description"></textarea>
+    </div>
+    <div>
+        <label>Inicio / Fin:</label>
+        <input type="datetime-local" name="start" />
+        <input type="datetime-local" name="endTime" />
+    </div>
+
+    <!-- Categoría -->
+    <div>
+        <label>Categoría:</label>
+        <select name="category" id="category">
+            <option value="1">Trabajo</option>
+            <option value="2">Personal</option>
+            <option value="3">Otros</option>
+        </select>
+    </div>
+
+    <!-- Subtasks -->
+    <div>
+        <label>Subtask 1:</label>
+        <input type="text" name="subtask1_name" placeholder="Nombre" />
+        <input type="text" name="subtask1_description" placeholder="Descripción" />
+    </div>
+    <div>
+        <label>Subtask 2:</label>
+        <input type="text" name="subtask2_name" placeholder="Nombre" />
+        <input type="text" name="subtask2_description" placeholder="Descripción" />
+    </div>
+
+    <!-- Recurrencia -->
+    <div>
+        <input type="checkbox" id="isRecurring" /> Recurrente
+        <div id="recurrenceFields" style="display: none;">
+            <select name="recurrenceType">
+                <option value="daily">Diaria</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensual</option>
+            </select>
+            <input type="number" name="interval" placeholder="Intervalo" />
+            <input type="number" name="count" placeholder="Repeticiones" />
+        </div>
+    </div>
+
+    <button type="submit">Enviar</button>
+</form>
+
+{% verbatim %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('#dummyForm');
+    if (!form) return;
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        const categoryValue = form.category.value;
+        if (!categoryValue) {
+            alert("Debes seleccionar una categoría");
+            return;
+        }
+
+        const data = {
+            title: form.title.value,
+            description: form.description.value,
+            start: form.start.value,
+            endTime: form.endTime.value,
+            category: parseInt(categoryValue),
+            subtasks: [
+                form.subtask1_name?.value ? {
+                    name: form.subtask1_name.value,
+                    description: form.subtask1_description.value,
+                    start: form.start.value,
+                    endTime: form.endTime.value,
+                    status: 'pending'
+                } : null,
+                form.subtask2_name?.value ? {
+                    name: form.subtask2_name.value,
+                    description: form.subtask2_description.value,
+                    start: form.start.value,
+                    endTime: form.endTime.value,
+                    status: 'pending'
+                } : null
+            ].filter(st => st !== null),
+            recurrence: form.isRecurring?.checked ? {
+                type: form.recurrenceType.value,
+                interval: parseInt(form.interval.value),
+                count: parseInt(form.count.value)
+            } : null
+        };
+
+        console.log("Enviando datos al endpoint:", data);
+
+        fetch('/task-create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(resp => resp.json()) // parsea siempre JSON
+        .then(json => console.log("Respuesta del endpoint:", json))
+        .catch(err => console.error("Error en fetch:", err));
+    });
+});
+</script>
+{% endverbatim %}
+</body>
+</html>
