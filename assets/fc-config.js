@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
   var calendarEl = document.getElementById('calendar');
-  var calendar = new FullCalendar.Calendar(calendarEl, {
+  window.calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridWeek',
     headerToolbar: {
       left: 'title',

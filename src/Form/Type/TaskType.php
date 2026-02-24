@@ -6,6 +6,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
@@ -42,6 +43,27 @@ class TaskType extends AbstractType
                 'allow_add' => true,
                 'allow_delete' => true,
                 'by_reference' => false,
+            ])
+            // --- campos de recurrencia ---
+            ->add('recurrence_type', ChoiceType::class, [
+                'choices' => [
+                    'Diaria' => 'daily',
+                    'Semanal' => 'weekly',
+                    'Mensual' => 'monthly',
+                ],
+                'mapped' => false,
+                'required' => false,
+                'placeholder' => 'Seleccione tipo de recurrencia',
+            ])
+            ->add('recurrence_interval', IntegerType::class, [
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['min' => 1],
+            ])
+            ->add('recurrence_count', IntegerType::class, [
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['min' => 1, 'max' => 30],
             ])
             //->add('save', SubmitType::class)
         ;

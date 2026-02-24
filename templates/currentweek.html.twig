@@ -15,73 +15,6 @@
             <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
 
             <script>
-            document
-            .querySelectorAll('.add_item_link')
-            .forEach(btn => {
-              btn.addEventListener("click", addFormToCollection);
-
-            });
-
-            document
-            .querySelectorAll('ul.subtasks li')
-              .forEach((subtask) => {
-                  addTagFormDeleteLink(subtask)
-              })
-
-            function addFormToCollection(e) {
-              const collectionHolder = document.querySelector('.' + e.currentTarget.dataset.collectionHolderClass);
-
-              const item = document.createElement('li');
-
-              item.innerHTML = collectionHolder
-                .dataset
-                .prototype
-                .replace(
-                  /__name__/g,
-                  collectionHolder.dataset.index
-                );
-
-              collectionHolder.appendChild(item);
-
-
-
-              addTagFormDeleteLink(item);
-
-              // Poner mismas fechas en los campos datetime de las subtask que en el task original
-
-              const indice = collectionHolder.dataset.index; //Vemos el index de cada item.
-
-              const original_inicio = document.getElementById("task_start");
-
-              const clon_inicio = document.getElementById(`task_subtasks_${indice}_start`);
-
-              clon_inicio.value = original_inicio.value;
-
-              const original_fin = document.getElementById("task_endtime");
-
-              const clon_fin = document.getElementById(`task_subtasks_${indice}_endtime`);
-
-              clon_fin.value = original_fin.value;
-
-              collectionHolder.dataset.index++;
-
-              };
-
-              function addTagFormDeleteLink(item) {
-              const removeFormButton = document.createElement('button');
-              removeFormButton.className = "remove btn btn-danger";
-              removeFormButton.innerText = 'X';
-
-              item.prepend(removeFormButton);
-
-              removeFormButton.addEventListener('click', (e) => {
-                  e.preventDefault();
-                  // remove the li for the tag form
-                  item.remove();
-              });
-              }
-            </script>
-            <script>
             $(document).on('click','#estado', function() {
 
             const $btn = $(this);
@@ -110,6 +43,138 @@
                     console.log(response.status);
                     console.log(response.task);
                 }
+                });
+            });
+            </script>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const modal = document.getElementById('crearEvento');
+                if (!modal) return;
+
+                modal.addEventListener('shown.bs.modal', () => {
+                    const form = modal.querySelector('form');
+                    if (!form || form.dataset.listenerAdded) return;
+                    form.dataset.listenerAdded = "true";
+
+                    // --- Subtasks existentes ---
+                    modal.querySelectorAll('ul.subtasks li').forEach(li => addTagFormDeleteLink(li));
+
+                    // --- Botones Add Subtask ---
+                    modal.querySelectorAll('.add_item_link').forEach(btn => {
+                        if (btn.dataset.listenerAdded) return;
+                        btn.dataset.listenerAdded = "true";
+                        btn.addEventListener('click', addFormToCollection);
+                    });
+
+                    // --- Recurrencia: mostrar/ocultar campos ---
+                    const recurrenteCheckbox = document.getElementById('task_recurrente');
+                    const recurrenceFields = document.getElementById('recurrence_fields');
+                    if (recurrenteCheckbox && recurrenceFields) {
+                        recurrenceFields.style.display = recurrenteCheckbox.checked ? 'block' : 'none';
+                        recurrenteCheckbox.addEventListener('change', () => {
+                            recurrenceFields.style.display = recurrenteCheckbox.checked ? 'block' : 'none';
+                        });
+                    }
+
+                    // --- Submit Form ---
+                    form.addEventListener('submit', e => {
+                        e.preventDefault();
+                        console.log("Listener ejecutado");
+
+                        const subtasks = [];
+                        modal.querySelectorAll('.subtasks li').forEach(li => {
+                            const name = li.querySelector('[name*="[name]"]')?.value;
+                            const description = li.querySelector('[name*="[description]"]')?.value;
+                            const start = li.querySelector('[name*="[start]"]')?.value;
+                            const endtime = li.querySelector('[name*="[endtime]"]')?.value;
+                            if (name) {
+                                subtasks.push({ name, description, start, endTime: endtime, status: false });
+                            }
+                        });
+
+                        const data = {
+                            title: form.querySelector('[name="task[name]"]').value,
+                            description: form.querySelector('[name="task[description]"]').value,
+                            category: form.querySelector('[name="task[category]"]').value,
+                            start: form.querySelector('[name="task[start]"]').value,
+                            endTime: form.querySelector('[name="task[endtime]"]').value,
+                            subtasks: subtasks,
+                            recurrence: recurrenteCheckbox?.checked ? {
+                                type: form.querySelector('[name="task[recurrence_type]"]').value,
+                                interval: parseInt(form.querySelector('[name="task[recurrence_interval]"]').value),
+                                count: parseInt(form.querySelector('[name="task[recurrence_count]"]').value)
+                            } : null
+                        };
+
+                        console.log("Enviando datos:", data);
+
+                        fetch('/task-create', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        })
+                        .then(r => r.json())
+                        .then(resp => {
+                            console.log("Respuesta del endpoint:", resp);
+                            if (resp.status === "ok") {
+                                bootstrap.Modal.getInstance(modal).hide();
+                                console.log("Refetcing events");
+                                window.calendar.refetchEvents();
+                                // --- DEBUG: Comprobar que el refetch se ejecuta y los eventos están en el endpoint ---
+                                console.log("Refetching events...");
+                                fetch('/get-events')
+                                  .then(r => r.json())
+                                  .then(data => {
+                                    console.log("Respuesta de /get-events:", data);
+                                    console.log("Primer evento start/end:", data[0]?.start, data[0]?.end);
+                                  })
+                                  .catch(err => console.error("Error comprobando /get-events:", err));
+
+                            } else {
+                                alert(resp.message);
+                            }
+                        })
+                        .catch(err => console.error("Error en fetch:", err));
+                    });
+
+                    // --- Función eliminar subtask ---
+                    function addTagFormDeleteLink(item) {
+                        if (item.dataset.deleteButtonAdded) return;
+                        item.dataset.deleteButtonAdded = "true";
+
+                        const removeFormButton = document.createElement('button');
+                        removeFormButton.className = "remove btn btn-danger";
+                        removeFormButton.innerText = 'X';
+                        item.prepend(removeFormButton);
+
+                        removeFormButton.addEventListener('click', e => {
+                            e.preventDefault();
+                            item.remove();
+                        });
+                    }
+
+                    // --- Función añadir subtask ---
+                    function addFormToCollection(e) {
+                        const collectionHolder = document.querySelector('.' + e.currentTarget.dataset.collectionHolderClass);
+                        const item = document.createElement('li');
+
+                        item.innerHTML = collectionHolder.dataset.prototype.replace(/__name__/g, collectionHolder.dataset.index);
+                        collectionHolder.appendChild(item);
+
+                        addTagFormDeleteLink(item);
+
+                        const indice = collectionHolder.dataset.index;
+                        const original_inicio = document.getElementById("task_start");
+                        const clon_inicio = document.getElementById(`task_subtasks_${indice}_start`);
+                        if (clon_inicio && original_inicio) clon_inicio.value = original_inicio.value;
+
+                        const original_fin = document.getElementById("task_endtime");
+                        const clon_fin = document.getElementById(`task_subtasks_${indice}_endtime`);
+                        if (clon_fin && original_fin) clon_fin.value = original_fin.value;
+
+                        collectionHolder.dataset.index++;
+                    }
                 });
             });
             </script>
@@ -227,7 +292,6 @@
                 <div class="mb-3">
                     {{ form_row(form.description, { label:'Información Adicional', attr: { 'class': 'form-control', 'placeholder': 'Información adicional.', 'rows': '4' } }) }}
 
-
                 </div>
 
                 <div class="mb-3">
@@ -240,6 +304,24 @@
 
                 <div class="mb-3">
                     {{ form_row(form.endtime, { label:'Fin', attr: { 'class': 'form-control', 'placeholder': 'Fin' } }) }}
+                </div>
+
+                <div class="mb-3 form-check">
+
+                <input type="checkbox" class="form-check-input" id="task_recurrente">
+                    <label class="form-check-label" for="task_recurrente">Tarea Recurrente</label>
+                </div>
+
+                <div id="recurrence_fields" style="display:none;">
+                    <div class="mb-3">
+                        {{ form_row(form.recurrence_type, { label: 'Tipo de recurrencia', attr: { 'class': 'form-control' } }) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.recurrence_interval, { label: 'Intervalo', attr: { 'class': 'form-control', 'min':1 } }) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.recurrence_count, { label: 'Número de repeticiones', attr: { 'class': 'form-control', 'min':1, 'max':30 } }) }}
+                    </div>
                 </div>
 
                 <button type="button" class="add_item_link btn btn-info" data-collection-holder-class="subtasks">Add a subtask</button>
