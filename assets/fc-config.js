@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
       crearEvento.show();
     }
   });
-  calendar.render();
+
+  window.calendar.render();
 
   });

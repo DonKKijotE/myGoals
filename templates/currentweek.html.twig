@@ -40,8 +40,7 @@
                                   .removeClass().addClass("btn btn-success");
                      }
 
-                    console.log(response.status);
-                    console.log(response.task);
+                    
                 }
                 });
             });
@@ -57,10 +56,10 @@
                     if (!form || form.dataset.listenerAdded) return;
                     form.dataset.listenerAdded = "true";
 
-                    // --- Subtasks existentes ---
+                    // --- Inicializar subtasks existentes ---
                     modal.querySelectorAll('ul.subtasks li').forEach(li => addTagFormDeleteLink(li));
 
-                    // --- Botones Add Subtask ---
+                    // --- Botones "Añadir subtask" ---
                     modal.querySelectorAll('.add_item_link').forEach(btn => {
                         if (btn.dataset.listenerAdded) return;
                         btn.dataset.listenerAdded = "true";
@@ -69,7 +68,7 @@
 
                     // --- Recurrencia: mostrar/ocultar campos ---
                     const recurrenteCheckbox = document.getElementById('task_recurrente');
-                    const recurrenceFields = document.getElementById('recurrence_fields');
+                    const recurrenceFields = document.getElementById('recurrence_fields'); // Agrupa type, interval, count
                     if (recurrenteCheckbox && recurrenceFields) {
                         recurrenceFields.style.display = recurrenteCheckbox.checked ? 'block' : 'none';
                         recurrenteCheckbox.addEventListener('change', () => {
@@ -77,68 +76,69 @@
                         });
                     }
 
-                    // --- Submit Form ---
                     form.addEventListener('submit', e => {
-                        e.preventDefault();
-                        console.log("Listener ejecutado");
+                    e.preventDefault();
 
-                        const subtasks = [];
-                        modal.querySelectorAll('.subtasks li').forEach(li => {
-                            const name = li.querySelector('[name*="[name]"]')?.value;
-                            const description = li.querySelector('[name*="[description]"]')?.value;
-                            const start = li.querySelector('[name*="[start]"]')?.value;
-                            const endtime = li.querySelector('[name*="[endtime]"]')?.value;
-                            if (name) {
-                                subtasks.push({ name, description, start, endTime: endtime, status: false });
-                            }
-                        });
 
-                        const data = {
-                            title: form.querySelector('[name="task[name]"]').value,
-                            description: form.querySelector('[name="task[description]"]').value,
-                            category: form.querySelector('[name="task[category]"]').value,
-                            start: form.querySelector('[name="task[start]"]').value,
-                            endTime: form.querySelector('[name="task[endtime]"]').value,
-                            subtasks: subtasks,
-                            recurrence: recurrenteCheckbox?.checked ? {
-                                type: form.querySelector('[name="task[recurrence_type]"]').value,
-                                interval: parseInt(form.querySelector('[name="task[recurrence_interval]"]').value),
-                                count: parseInt(form.querySelector('[name="task[recurrence_count]"]').value)
-                            } : null
-                        };
+                    // --- Recolectar subtasks ---
+                    const subtasks = [];
+                    modal.querySelectorAll('.subtasks li').forEach(li => {
+                        const name = li.querySelector('[name*="[name]"]')?.value;
+                        const description = li.querySelector('[name*="[description]"]')?.value;
+                        const start = li.querySelector('[name*="[start]"]')?.value;
+                        const endtime = li.querySelector('[name*="[endtime]"]')?.value;
 
-                        console.log("Enviando datos:", data);
-
-                        fetch('/task-create', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                        })
-                        .then(r => r.json())
-                        .then(resp => {
-                            console.log("Respuesta del endpoint:", resp);
-                            if (resp.status === "ok") {
-                                bootstrap.Modal.getInstance(modal).hide();
-                                console.log("Refetcing events");
-                                window.calendar.refetchEvents();
-                                // --- DEBUG: Comprobar que el refetch se ejecuta y los eventos están en el endpoint ---
-                                console.log("Refetching events...");
-                                fetch('/get-events')
-                                  .then(r => r.json())
-                                  .then(data => {
-                                    console.log("Respuesta de /get-events:", data);
-                                    console.log("Primer evento start/end:", data[0]?.start, data[0]?.end);
-                                  })
-                                  .catch(err => console.error("Error comprobando /get-events:", err));
-
-                            } else {
-                                alert(resp.message);
-                            }
-                        })
-                        .catch(err => console.error("Error en fetch:", err));
+                        if (name) {
+                            subtasks.push({ name, description, start, endTime: endtime, status: false });
+                        }
                     });
 
-                    // --- Función eliminar subtask ---
+                    // --- Recolectar datos principales ---
+                    const data = {
+                        title: form.querySelector('[name="task[name]"]').value,
+                        description: form.querySelector('[name="task[description]"]').value,
+                        category: form.querySelector('[name="task[category]"]').value,
+                        start: form.querySelector('[name="task[start]"]').value,
+                        endTime: form.querySelector('[name="task[endtime]"]').value,
+                        subtasks: subtasks,
+                        recurrence: recurrenteCheckbox?.checked ? {
+                            type: form.querySelector('[name="task[recurrence_type]"]').value,
+                            interval: parseInt(form.querySelector('[name="task[recurrence_interval]"]').value),
+                            count: parseInt(form.querySelector('[name="task[recurrence_count]"]').value)
+                        } : null
+                    };
+
+
+
+                    // --- Fetch al endpoint ---
+                    fetch('/task-create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    })
+                    .then(r => r.json())
+                    .then(resp => {
+
+                        if (resp.status === "ok") {
+                            bootstrap.Modal.getInstance(modal).hide();
+
+                            // ✅ Refresca el calendario de forma segura
+                            if (window.calendar && typeof window.calendar.refetchEvents === 'function') {
+                                window.calendar.refetchEvents();
+                            }
+
+                            document.dispatchEvent(new CustomEvent('taskCreated'));
+                        } else {
+                            alert(resp.message);
+                        }
+                    })
+                    .catch(err => console.error("Error en fetch:", err));
+                });
+
+
+
+
+                    // --- Función para botón eliminar subtask ---
                     function addTagFormDeleteLink(item) {
                         if (item.dataset.deleteButtonAdded) return;
                         item.dataset.deleteButtonAdded = "true";
@@ -154,7 +154,7 @@
                         });
                     }
 
-                    // --- Función añadir subtask ---
+                    // --- Función original de añadir subtasks ---
                     function addFormToCollection(e) {
                         const collectionHolder = document.querySelector('.' + e.currentTarget.dataset.collectionHolderClass);
                         const item = document.createElement('li');
@@ -164,6 +164,7 @@
 
                         addTagFormDeleteLink(item);
 
+                        // Clonado de fechas de la task principal
                         const indice = collectionHolder.dataset.index;
                         const original_inicio = document.getElementById("task_start");
                         const clon_inicio = document.getElementById(`task_subtasks_${indice}_start`);
