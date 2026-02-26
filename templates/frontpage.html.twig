@@ -78,6 +78,7 @@ function actualizarBarrasAjax() {
 // Cambiar estado de una tarea
 // =======================
 $(document).on('click','.estado', function() {
+
     const $btn = $(this);
     const eventType = $btn.attr('data-event-type');
     const eventId = $btn.attr('data-event-id');
@@ -86,10 +87,28 @@ $(document).on('click','.estado', function() {
         type: "POST",
         url: `/set-event-status/${eventType}/${eventId}`,
         success: function(response) {
+
+            if(response.status == 1) {
+
+                $btn
+                    .html('<i class="bi bi-x-circle"></i>')
+                    .removeClass('btn-success btn-danger')
+                    .addClass('btn-danger');
+
+            } else {
+
+                $btn
+                    .html('<i class="bi bi-check-circle"></i>')
+                    .removeClass('btn-danger btn-success')
+                    .addClass('btn-success');
+
+            }
+
             // Actualizamos barras
             actualizarBarrasAjax();
         }
     });
+
 });
 
 // =======================

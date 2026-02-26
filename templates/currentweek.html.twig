@@ -38,9 +38,10 @@
                      else {
                       $("#estado").html('Finalizar')
                                   .removeClass().addClass("btn btn-success");
+                                  
                      }
 
-                    
+
                 }
                 });
             });
@@ -122,7 +123,7 @@
                         if (resp.status === "ok") {
                             bootstrap.Modal.getInstance(modal).hide();
 
-                            // ✅ Refresca el calendario de forma segura
+
                             if (window.calendar && typeof window.calendar.refetchEvents === 'function') {
                                 window.calendar.refetchEvents();
                             }
