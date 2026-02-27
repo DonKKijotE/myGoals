@@ -18,10 +18,11 @@
             $(document).on('click','#estado', function() {
 
             const $btn = $(this);
+            const eventType = $btn.attr('data-event-type');
             const eventId = $btn.attr('data-event-id');
 
             // Construimos la URL usando el ID directamente
-            const url = `/set-event-status/${eventId}`;
+            const url = `/set-event-status/${eventType}/${eventId}`;
 
                $.ajax({
                   type: "POST",
@@ -31,14 +32,14 @@
                     if(response.status == 1)
                      {
                       $("#estado").html('Sin Finalizar')
-                                  .removeClass().addClass("btn btn-warning");
+                                  .removeClass().addClass("btn btn-danger");
 
                      }
 
                      else {
                       $("#estado").html('Finalizar')
                                   .removeClass().addClass("btn btn-success");
-                                  
+
                      }
 
 
@@ -263,7 +264,7 @@
           <dd class="col-sm-9" id="tarea_inicio">Fecha de inicio de la tarea</dd>
           <dt class="col-sm-3">Fin:</dt>
           <dd class="col-sm-9" id="tarea_fin">Fecha de fin de la tarea</dd>
-          <dt class="col-sm-6"><button id="estado" data-event-id=""></button></dt>
+          <dt class="col-sm-6"><button id="estado" data-event-id="" data-event-type="task"></button></dt>
         </dl>
       </div>
     </div>
