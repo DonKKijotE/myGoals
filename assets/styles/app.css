@@ -130,3 +130,8 @@ div[id^="task_subtasks_"] {
     text-overflow: ellipsis;   /* muestra “…” si es demasiado largo */
     z-index: 1;                /* para que siempre quede por encima del div interno */
 }
+
+.card svg {
+  transform: translate3d(0, 0, 0);   /* fuerza la alineación a la cuadrícula de píxeles */
+  outline: 1px solid transparent;    /* ayuda al antialiasing a estabilizarse */
+}

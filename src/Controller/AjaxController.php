@@ -185,11 +185,14 @@ class AjaxController extends AbstractController
 
         $entityManager->flush();
 
-        $response = array(
-          'task' => $event->getId(),
-          'status' => $marker,
-          'success' => true,
-        );
+        $response = [
+            'success' => true,
+            'data' => [
+                'task' => $event->getId(),
+                'status' => $marker
+            ]
+        ];
+
 
         return new JsonResponse($response);
 
@@ -220,10 +223,12 @@ class AjaxController extends AbstractController
         $entityManager->remove($event);
         $entityManager->flush();
 
-        $response = array(
-          'task' => $event->getId(),
-          'success' => true,
-        );
+        $response = [
+            'success' => true,
+            'data' => [
+                'task' => $event->getId(),
+            ]
+        ];
 
         return new JsonResponse($response);
 

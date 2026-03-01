@@ -6,21 +6,34 @@
     {{ parent() }}
 
     <script>
+
     function actualizarBarras(progress) {
     // --- Barra global ---
     const progressBar = document.getElementById("progressBar");
     if (progressBar) {
         const porcentaje = progress.global.percent;
 
-        progressBar.classList.remove('bg-danger','bg-warning','bg-info','bg-success');
+        // Limpiar clases de color
+        ['bg-danger','bg-warning','bg-info','bg-success'].forEach(c => progressBar.classList.remove(c));
 
-        if (porcentaje <= 20) progressBar.classList.add('bg-danger');
+        // Colores según horquillas
+        if (porcentaje === 0) progressBar.classList.add('bg-danger');
+        else if (porcentaje <= 20) progressBar.classList.add('bg-danger');
         else if (porcentaje <= 60) progressBar.classList.add('bg-warning');
         else if (porcentaje < 100) progressBar.classList.add('bg-info');
         else progressBar.classList.add('bg-success');
 
-        progressBar.style.width = porcentaje + "%";
+        // Ancho mínimo para que se vea el color y el texto si es 0%
+        progressBar.style.width = (porcentaje === 0 ? '3%' : porcentaje + "%");
+
+        // Mostrar porcentaje centrado
         progressBar.textContent = porcentaje + "%";
+        progressBar.style.textAlign = 'center';
+        progressBar.style.color = '#000';
+        progressBar.style.fontWeight = 'bold';
+        progressBar.style.display = 'flex';
+        progressBar.style.alignItems = 'center';
+        progressBar.style.justifyContent = 'center';
     }
 
     // --- Barras por categoría ---
@@ -63,89 +76,155 @@
             }, 50);
         });
     }
-}
+  }
 
-// =======================
-// Función auxiliar para llamar al endpoint
-// =======================
-function actualizarBarrasAjax() {
-    $.getJSON('/get-progress', function(progress) {
-        actualizarBarras(progress);
+
+  // Función auxiliar para llamar al endpoint
+
+  async function actualizarBarrasAjax() {
+  try {
+    const response = await fetch('/get-progress', {
+      headers: {
+        'Accept': 'application/json'
+      }
     });
-}
 
-// =======================
-// Cambiar estado de una tarea
-// =======================
-$(document).on('click','.estado', function() {
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    const $btn = $(this);
-    const eventType = $btn.attr('data-event-type');
-    const eventId = $btn.attr('data-event-id');
+    const progress = await response.json();
+    actualizarBarras(progress);
 
-    $.ajax({
-        type: "POST",
-        url: `/set-event-status/${eventType}/${eventId}`,
-        success: function(response) {
+  } catch (err) {
+    console.error('Error al cargar las barras:', err);
+    }
+  }
 
-            if(response.status == 1) {
+  // TODO EL JS NUEVO REMODELADO
 
-                $btn
-                    .html('<i class="bi bi-x-circle"></i>')
-                    .removeClass('btn-success')
-                    .addClass('btn-danger');
+  document.addEventListener('click', async function(e) {
 
-            } else {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
 
-                $btn
-                    .html('<i class="bi bi-check-circle"></i>')
-                    .removeClass('btn-danger')
-                    .addClass('btn-success');
+    switch (btn.dataset.action) {
 
+        case 'change-status':
+
+            await toggleStatus(btn);
+
+            break;
+
+        case 'modal-delete':
+            modalDelete(btn);
+            break;
+
+        case 'final-delete':
+            finalDelete(btn);
+            break;
+
+    }
+
+
+    async function toggleStatus(btn) {
+
+      const { eventType } = btn.dataset;
+      const eventId = Number(btn.dataset.eventId);
+
+      const result = await fetchToggleStatus(eventType, eventId);
+
+      if (!result.success) {
+          ;
+          return;
+      }
+
+      updateStatusButton(btn, result.data);
+      actualizarBarrasAjax();
+
+
+    }
+
+    async function fetchToggleStatus(eventType, eventId) {
+
+      const response = await fetch(`/set-event-status/${eventType}/${eventId}`, {
+          method: 'POST',
+          headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+          }
+      });
+
+      return await response.json();
+
+    }
+
+    function updateStatusButton(btn, data) {
+
+      const icon = btn.querySelector('i');
+
+      if (data.status == 1) {
+
+          btn.innerHTML = '<i class="bi bi-x-circle"></i>';
+          btn.className = 'btn btn-danger btn-sm';
+
+      } else {
+
+          btn.innerHTML = '<i class="bi bi-check-circle"></i>';
+          btn.className = 'btn btn-success btn-sm';
+
+      }
+
+    }
+
+    function modalDelete(btn) {
+
+    const { eventType } = btn.dataset;
+    const eventId = Number(btn.dataset.eventId);
+
+    boton_eliminar = document.getElementById("boton_eliminar");
+    boton_eliminar.setAttribute('data-event-id', eventId);
+
+
+    }
+
+    async function finalDelete(btn) {
+        const eventId = Number(btn.dataset.eventId);
+
+        const response = await fetch(`/delete-event/${eventId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
+        });
 
-            // Actualizamos barras
-            actualizarBarrasAjax();
+        const result = await response.json();
+
+        setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('modalEliminar'))?.hide();
+        }, 200);
+
+
+        if (result.success) {
+            const col = document.getElementById('event-' + eventId)?.closest('.col-12, .col-sm-6, .col-md-3');
+            if (col) col.remove();
         }
-    });
 
-});
 
-// =======================
-// Abrir modal de eliminación
-// =======================
-$(document).on('click','.eliminar', function() {
-    const $btn = $(this);
-    const eliminarId = $btn.attr('data-event-id');
-    $('#boton_eliminar').attr('data-event-id', eliminarId);
-});
+        return result;
+    }
 
-// =======================
-// Eliminar tarea
-// =======================
-$(document).on('click','#boton_eliminar', function() {
-    const $btn = $(this);
-    const eventId = $btn.attr('data-event-id');
+  });
 
-    $.ajax({
-        type: "POST",
-        url: `/delete-event/${eventId}`,
-        success: function(response) {
-            // Quitar del DOM la tarea eliminada
-            $(`#event-${eventId}`).remove();
-            $('#modalEliminar').modal('hide');
-            // Actualizamos barras
-            actualizarBarrasAjax();
-        }
-    });
-});
 
-// =======================
-// Inicialización al cargar la página
-// =======================
-$(document).ready(function() {
-    actualizarBarrasAjax(); // Cargar barras según datos iniciales
-});
+
+
+  // Inicialización al cargar la página
+
+  document.addEventListener('DOMContentLoaded', function() {
+    actualizarBarrasAjax();
+  });
     </script>
 
 {% endblock %}
@@ -308,15 +387,15 @@ $(document).ready(function() {
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         {% if evento.status == false %}
-                                        <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-event-type="task" data-event-id="{{ evento.id }}">
+                                        <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-action="change-status" data-event-type="task" data-event-id="{{ evento.id }}">
                                             <i class="bi bi-check-circle"></i>
                                         </button>
                                         {% else %}
-                                        <button type="button" class="btn btn-danger btn-sm estado" title="Cambiar Estado" data-event-type="task" data-event-id="{{ evento.id }}">
+                                        <button type="button" class="btn btn-danger btn-sm estado" title="Cambiar Estado" data-action="change-status" data-event-type="task" data-event-id="{{ evento.id }}">
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                         {% endif %}
-                                        <button type="button" class="btn btn-danger btn-sm eliminar" title="Eliminar" data-event-id="{{ evento.id }}" data-bs-toggle="modal" data-bs-target="#modalEliminar">
+                                        <button type="button" class="btn btn-danger btn-sm eliminar" title="Eliminar" data-event-type="task" data-action="modal-delete" data-event-id="{{ evento.id }}" data-bs-toggle="modal" data-bs-target="#modalEliminar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -388,7 +467,7 @@ $(document).ready(function() {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        <button type="button" class="btn btn-danger" id="boton_eliminar" data-event-id="">Eliminar</button>
+        <button type="button" class="btn btn-danger" id="boton_eliminar" data-action="final-delete" data-event-id="">Eliminar</button>
       </div>
     </div>
   </div>

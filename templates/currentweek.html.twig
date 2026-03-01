@@ -9,42 +9,74 @@
 
         {% block javascripts %}
             {{ parent() }}
-            {{ encore_entry_script_tags('fc-locales') }}
-            {{ encore_entry_script_tags('fc-config') }}
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js" integrity="sha512-K/oyQtMXpxI4+K0W7H25UopjM8pzq0yrVdFdG21Fh5dBe91I40pDd9A4lzNlHPHBIP2cwZuoxaUSX0GJSObvGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
+            {{ encore_entry_script_tags('fc-config') }}
+            {{ encore_entry_script_tags('fc-locales') }}
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js" integrity="sha512-K/oyQtMXpxI4+K0W7H25UopjM8pzq0yrVdFdG21Fh5dBe91I40pDd9A4lzNlHPHBIP2cwZuoxaUSX0GJSObvGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
             <script>
-            $(document).on('click','#estado', function() {
+            document.addEventListener('click', async function(e) {
 
-            const $btn = $(this);
-            const eventType = $btn.attr('data-event-type');
-            const eventId = $btn.attr('data-event-id');
+              const btn = e.target.closest('[data-action]');
+              if (!btn) return;
 
-            // Construimos la URL usando el ID directamente
-            const url = `/set-event-status/${eventType}/${eventId}`;
+              switch (btn.dataset.action) {
 
-               $.ajax({
-                  type: "POST",
-                  url: url,
-                  success: function(response) {
+                  case 'change-status':
 
-                    if(response.status == 1)
-                     {
-                      $("#estado").html('Sin Finalizar')
-                                  .removeClass().addClass("btn btn-danger");
+                      await toggleStatus(btn);
 
-                     }
+                      break;
 
-                     else {
-                      $("#estado").html('Finalizar')
-                                  .removeClass().addClass("btn btn-success");
+              }
 
-                     }
+              async function toggleStatus(btn) {
 
+                const { eventType } = btn.dataset;
+                const eventId = Number(btn.dataset.eventId);
+
+                const result = await fetchToggleStatus(eventType, eventId);
+
+                if (!result.success) {
+                    ;
+                    return;
+                }
+
+                updateStatusButton(btn, result.data);
+
+              }
+
+              async function fetchToggleStatus(eventType, eventId) {
+
+                const response = await fetch(`/set-event-status/${eventType}/${eventId}`, {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                return await response.json();
+
+              }
+
+              function updateStatusButton(btn, data) {
+
+                if (data.status == 1) {
+
+                    btn.innerText = 'Sin Finalizar';
+                    btn.className = 'btn btn-danger';
+
+                } else {
+
+                    btn.innerText = 'Finalizar';
+                    btn.className = 'btn btn-success';
 
                 }
-                });
+
+              }
+
             });
             </script>
 
@@ -264,7 +296,7 @@
           <dd class="col-sm-9" id="tarea_inicio">Fecha de inicio de la tarea</dd>
           <dt class="col-sm-3">Fin:</dt>
           <dd class="col-sm-9" id="tarea_fin">Fecha de fin de la tarea</dd>
-          <dt class="col-sm-6"><button id="estado" data-event-id="" data-event-type="task"></button></dt>
+          <dt class="col-sm-6"><button id="estado" data-action="change-status" data-event-type="task" data-event-id="" ></button></dt>
         </dl>
       </div>
     </div>

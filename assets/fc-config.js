@@ -4,14 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initialView: 'dayGridWeek',
     headerToolbar: {
       left: 'title',
-      right: 'today,dayGridMonth,dayGridWeek,dayGridDay,prev,next' // user can switch between the two
-    },
-    buttonText: {
-      today:    'hoy',
-      month:    'mes',
-      week:     'semana',
-      day:      'dia',
-      list:     'lista'
+      right: 'today,dayGridMonth,dayGridWeek,dayGridDay,prev,next'
     },
     themeSystem: 'bootstrap5',
     selectable: true,
@@ -29,17 +22,17 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById("tarea_inicio").innerText = info.event.start.toLocaleString();
       document.getElementById("tarea_fin").innerText = info.event.end !== null ? info.event.end.toLocaleString() : info.event.start.toLocaleString();
 
-      $(cambiarEstado).attr('data-event-id', info.event.id);
+      cambiarEstado.dataset.eventId = info.event.id;
 
       if(info.event.extendedProps.status == true)
        {
-        $(cambiarEstado).html('Finalizada')
-                        .removeClass().addClass("btn btn-warning");
+        cambiarEstado.innerHTML = "Finalizada";
+        cambiarEstado.className = "btn btn-warning";
        }
 
        else {
-        $(cambiarEstado).html('Finalizar')
-                        .removeClass().addClass("btn btn-success");
+        cambiarEstado.innerHTML = "Finalizar";
+        cambiarEstado.className = "btn btn-success";
        }
 
       verEvento.show();
