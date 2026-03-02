@@ -135,11 +135,11 @@
           <dd class="col-sm-12">
           {% if subtarea.entity.status == false %}
 
-          <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-context="event" data-action="change-status" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
+          <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-context="event" data-main-task-id="{{ event.id }}" data-action="change-status" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
               <i class="bi bi-check-circle"></i>
           </button>
           {% else %}
-          <button type="button" class="btn btn-warning btn-sm estado" title="Cambiar Estado" data-context="event" data-action="change-status" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
+          <button type="button" class="btn btn-warning btn-sm estado" title="Cambiar Estado" data-context="event"  data-main-task-id="{{ event.id }}" data-action="change-status" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
               <i class="bi bi-x-circle"></i>
           </button>
           {% endif %}
