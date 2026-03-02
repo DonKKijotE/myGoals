@@ -108,96 +108,63 @@ class AjaxController extends AbstractController
     //Endpoint para cambiar el status de un evento o subevento.
 
     #[Route('/set-event-status/{tipo}/{id}', name: 'set_event_status')]
-    public function privateSetEventStatus(Request $request, EntityManagerInterface $entityManager, string $tipo, int $id): JsonResponse
-    {
+public function privateSetEventStatus(Request $request, EntityManagerInterface $entityManager, string $tipo, int $id): JsonResponse
+{
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
-        // Si marcas una task como hecha marca todas las subtasks como hechas.
-        // Si marcas una subtask como hecha comprueba si todas las subtasks están hechas, entonces marca la task principal como hecha.
-
-        // Meter un voter para que cada uno solo toque lo suyo.
-
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
-
-        if (!$request->isXmlHttpRequest())
-        {
-          throw $this->createNotFoundException('This is not an AJAX request.');
-        }
-
-        if($tipo == "task")
-        {
-          $event = $entityManager->getRepository(Task::class)->find($id);
-
-        }
-
-        elseif($tipo == "subtask")
-        {
-          $event = $entityManager->getRepository(SubTask::class)->find($id);
-        }
-
-
-        if (!$event) {
-          throw $this->createNotFoundException('No task/subtask found for id '.$id);
-        }
-
-        if($event->isStatus() == 0) {
-          $event->setStatus(1);
-          $marker = 1;
-        }
-        else{
-          $event->setStatus(0);
-          $marker = 0;
-        }
-
-        if($tipo === "task" )  //Si marcas la task como hecha marca todas las subtask como hechas.
-        {
-          $subtasks = $event->getSubTasks();
-          foreach ($subtasks as $st) {
-            $st->setStatus(true);
-          }
-
-        }
-
-
-        if ($tipo === "subtask") {  // si es subtask, comprobar si todas las subtasks de la task están hechas
-            $task = $event->getMainTask();
-
-            $allHechas = true;
-
-            foreach ($task->getSubTasks() as $st) {
-                if (!$st->isStatus()) {
-                    $allHechas = false;
-                    break;
-                }
-            }
-
-              if ($allHechas) {
-                  $task->setStatus(1);
-              }
-
-              if(!$allHechas && $task-> isStatus() === true)
-              {
-                $task->setStatus(false);
-              }
-
-
-          }
-
-
-        $entityManager->flush();
-
-        $response = [
-            'success' => true,
-            'data' => [
-                'task' => $event->getId(),
-                'status' => $marker
-            ]
-        ];
-
-
-        return new JsonResponse($response);
-
-
+    if (!$request->isXmlHttpRequest()) {
+        throw $this->createNotFoundException('This is not an AJAX request.');
     }
+
+    // Buscar el evento/subevento
+    if ($tipo === "task") {
+        $event = $entityManager->getRepository(Task::class)->find($id);
+    } elseif ($tipo === "subtask") {
+        $event = $entityManager->getRepository(SubTask::class)->find($id);
+    } else {
+        throw $this->createNotFoundException('Tipo no válido: '.$tipo);
+    }
+
+    if (!$event) {
+        throw $this->createNotFoundException('No task/subtask found for id '.$id);
+    }
+
+    // Alternar estado
+    $newStatus = !$event->isStatus();
+    $event->setStatus($newStatus ? 1 : 0);
+
+    // Si es task → sincronizar todas las subtasks
+    if ($tipo === "task") {
+        foreach ($event->getSubTasks() as $st) {
+            $st->setStatus($newStatus ? 1 : 0);
+        }
+    }
+
+    // Si es subtask → recalcular estado de la task principal
+    if ($tipo === "subtask") {
+        $task = $event->getMainTask();
+        $allHechas = true;
+
+        foreach ($task->getSubTasks() as $st) {
+            if (!$st->isStatus()) {
+                $allHechas = false;
+                break;
+            }
+        }
+
+        $task->setStatus($allHechas ? 1 : 0);
+    }
+
+    $entityManager->flush();
+
+    return new JsonResponse([
+        'success' => true,
+        'data' => [
+            'task' => $event->getId(),
+            'status' => $newStatus ? 1 : 0
+        ]
+    ]);
+}
 
     //Endpoint para eliminar tasks o subtasks
 
@@ -345,6 +312,36 @@ class AjaxController extends AbstractController
 
         return new JsonResponse($progress);
     }
+
+    #[Route('/task-progress/{id}', name: 'task_progress')]
+    public function taskProgress(EntityManagerInterface $entityManager, int $id): JsonResponse
+    {
+        $task = $entityManager->getRepository(Task::class)->find($id);
+        if (!$task) throw $this->createNotFoundException("No task found with id $id");
+
+        // 🔥 Trae todas las subtasks desde la DB, no desde la colección perezosa
+        $subtasks = $entityManager->getRepository(SubTask::class)->findBy(['maintask' => $task->getId()]);
+        $done = 0;
+        $subtasksData = [];
+
+        foreach ($subtasks as $st) {
+            if ($st->isStatus()) $done++;
+            $subtasksData[] = ['id' => $st->getId(), 'status' => $st->isStatus()];
+        }
+
+        // Porcentaje: solo basado en subtasks si existen
+        $progress = count($subtasks) > 0 ? round(($done / count($subtasks)) * 100, 2) : ($task->isStatus() ? 100 : 0);
+
+        return new JsonResponse([
+            'task' => [
+                'id' => $task->getId(),
+                'status' => $task->isStatus(),
+                'progress' => $progress
+            ],
+            'subtasks' => $subtasksData
+        ]);
+    }
+
 
     #[Route('/task-create', name: 'create_task', methods: ['POST'])]
     public function create(Request $request, TaskCreationService $taskCreationService): JsonResponse

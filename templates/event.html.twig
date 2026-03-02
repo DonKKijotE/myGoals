@@ -3,62 +3,8 @@
 {% block title %}myGoals - Frontpage{% endblock %}
 
 {% block javascripts %}
+
     {{ parent() }}
-
-    <script>
-    $(document).on('click','.estado', function() {
-
-    const $btn = $(this);
-    const eventType = $btn.attr('data-event-type');
-    const eventId = $btn.attr('data-event-id');
-
-    // Construimos la URL usando el ID directamente
-
-    const url = `/set-event-status/${eventType}/${eventId}`;
-
-       $.ajax({
-          type: "POST",
-          url: url,
-          success: function(response) {
-
-          location.reload();
-
-        }
-        });
-    });
-
-    // Cuando pinchas en el botón del evento para abrir el dialog de eliminar
-
-    $(document).on('click','.eliminar', function() {
-
-    const $btn = $(this);
-    const eliminarId = $btn.attr('data-event-id');
-    const cambiarEstado = document.getElementById("boton_eliminar");
-    $(cambiarEstado).attr('data-event-id', eliminarId);
-
-    });
-
-    // Cuando pinchas en el botón para eliminar definitivamente
-
-    $(document).on('click','#boton_eliminar', function() {
-
-    const $btn = $(this);
-    const eventId = $btn.attr('data-event-id');
-
-    // Construimos la URL usando el ID directamente
-    const url = `/delete-event/${eventId}`;
-
-       $.ajax({
-          type: "POST",
-          url: url,
-          success: function(response) {
-
-          location.reload();
-
-        }
-        });
-    });
-    </script>
 
 {% endblock %}
 
@@ -129,41 +75,17 @@
       <br><br>
 
       <div class="progress mb-4" style="height: 30px; border-radius: 15px; overflow: hidden;">
-            <div id="progressBar"
+            <div id="progressBarTask"
                  class="progress-bar"
                  role="progressbar"
                  style="width: 0%; height: 30px; padding: 0;"
-                 aria-valuenow="{{ porcentajeHechos|round(0) }}"
+                 aria-valuenow="0"
                  aria-valuemin="0"
                  aria-valuemax="100">
                 0%
             </div>
       </div>
-        <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const progressBar = document.getElementById("progressBar");
-            if (!progressBar) return;
 
-            const porcentaje = parseInt(progressBar.getAttribute("aria-valuenow"));
-
-            // Asignar color según horquillas
-            if (porcentaje <= 20) {
-                progressBar.classList.add('bg-danger');
-            } else if (porcentaje <= 60) {
-                progressBar.classList.add('bg-warning');
-            } else if (porcentaje < 100) {
-                progressBar.classList.add('bg-info');
-            } else {
-                progressBar.classList.add('bg-success');
-            }
-
-            // Animación desde 0 hasta porcentaje
-            setTimeout(() => {
-                progressBar.style.width = porcentaje + "%";
-                progressBar.textContent = porcentaje + "%";
-            }, 50);
-        });
-        </script>
 
         <h2 class="row">Información Del Evento</h2>
         <br><br>
@@ -177,6 +99,21 @@
           <dd class="col-sm-10">{{end|date("d/m/Y H:i", app.user.timezone)}}</dd>
           <dt class="col-sm-2">Descripción:</dt>
           <dd class="col-sm-10">{{event.description}}</dd>
+          <dt class="col-sm-2">Acciones:</dt>
+          <dd class="col-sm-10">
+          {% if event.status == false %}
+          <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-context="event" data-action="change-status" data-event-type="task" data-event-id="{{ event.id }}">
+              <i class="bi bi-check-circle"></i>
+          </button>
+          {% else %}
+          <button type="button" class="btn btn-warning btn-sm estado" title="Cambiar Estado" data-context="event" data-action="change-status" data-event-type="task" data-event-id="{{ event.id }}">
+              <i class="bi bi-x-circle"></i>
+          </button>
+          {% endif %}
+
+
+
+          </dd>
         </dl>
 
         <br>
@@ -198,11 +135,11 @@
           <dd class="col-sm-12">
           {% if subtarea.entity.status == false %}
 
-          <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
+          <button type="button" class="btn btn-success btn-sm estado" title="Cambiar Estado" data-context="event" data-action="change-status" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
               <i class="bi bi-check-circle"></i>
           </button>
           {% else %}
-          <button type="button" class="btn btn-warning btn-sm estado" title="Cambiar Estado" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
+          <button type="button" class="btn btn-warning btn-sm estado" title="Cambiar Estado" data-context="event" data-action="change-status" data-event-type="subtask" data-event-id="{{ subtarea.entity.id }}">
               <i class="bi bi-x-circle"></i>
           </button>
           {% endif %}

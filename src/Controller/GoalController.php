@@ -207,26 +207,6 @@ class GoalController extends AbstractController
         throw $this->createNotFoundException('No task found for id '.$id);
       }
 
-      $estadoTarea = $event->isStatus();
-      $subTareas = $event->getSubTasks();
-      $totalSubTareas = count($subTareas);
-      $subTareasHechas = 0;
-
-      foreach ($subTareas as $subTarea) {
-          if ($subTarea->isStatus()) {
-              $subTareasHechas++;
-          }
-      }
-
-      // porcentaje basado en subtareas
-      $porcentajeHechos = $totalSubTareas > 0
-          ? round(($subTareasHechas / $totalSubTareas) * 100, 2)
-          : 0;
-
-      // si la tarea principal ya está completa, fuerza 100%
-      if ($event->isStatus() === true) {
-          $porcentajeHechos = 100;
-      }
 
       $userTimezone = $this->getUser()->getTimezone();
       $start = $dateTimeService->toUserTime($event->getStart(), $userTimezone);
@@ -251,7 +231,7 @@ class GoalController extends AbstractController
           'subtasks' => $subtasksForTwig,
           'start' => $start,
           'end' => $end,
-          'porcentajeHechos' => $porcentajeHechos,
+
       ]);
 
     }
