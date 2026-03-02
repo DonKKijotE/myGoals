@@ -51,10 +51,6 @@ div[id^="task_subtasks_"] {
     line-height: normal;
 }
 
-#progressBarTask {
-    border-radius: 15px; /* igual que el contenedor */
-}
-
 /* Colores por horquillas */
 .bg-danger { background: linear-gradient(90deg, #dc3545, #e57373); }
 .bg-warning { background: linear-gradient(90deg, #ffc107, #ffe066); }

@@ -106,24 +106,18 @@ function actualizarBarraTask(progress) {
     const progressBar = document.getElementById("progressBarTask");
     if (!progressBar) return;
 
-    // Redondear al entero, como la otra barra
-    const porcentaje = Math.round(progress);
-
     // Limpiar clases de color
     ['bg-danger','bg-warning','bg-info','bg-success'].forEach(c => progressBar.classList.remove(c));
 
     // Colores según horquillas
-    if (porcentaje === 0) progressBar.classList.add('bg-danger');
-    else if (porcentaje <= 20) progressBar.classList.add('bg-danger');
-    else if (porcentaje <= 60) progressBar.classList.add('bg-warning');
-    else if (porcentaje < 100) progressBar.classList.add('bg-info');
+    if (progress === 0) progressBar.classList.add('bg-danger');
+    else if (progress <= 20) progressBar.classList.add('bg-danger');
+    else if (progress <= 60) progressBar.classList.add('bg-warning');
+    else if (progress < 100) progressBar.classList.add('bg-info');
     else progressBar.classList.add('bg-success');
 
-    // Ancho mínimo para que se vea el color y el texto si es 0%
-    progressBar.style.width = (porcentaje === 0 ? '3%' : porcentaje + "%");
-
-    // Mostrar porcentaje centrado
-    progressBar.textContent = porcentaje + "%";
+    progressBar.style.width = progress + "%";
+    progressBar.textContent = progress + "%";
     progressBar.style.textAlign = 'center';
     progressBar.style.color = '#000';
     progressBar.style.fontWeight = 'bold';
@@ -146,9 +140,17 @@ async function toggleStatus(btn) {
       return;
   }
 
+  console.log(result.data)
   updateStatusButton(btn, result.data);
   actualizarBarrasAjax();
+  // 🔥 calcular progreso directamente desde el resultado del toggle
+    if (btn.dataset.context === "event") {
+        const subtasks = result.data.subtasks || [];
+        const done = subtasks.filter(st => st.status).length;
+        const progress = subtasks.length > 0 ? (done / subtasks.length) * 100 : (result.data.status ? 100 : 0);
 
+        actualizarBarraTask(progress);
+    }
 
 }
 
@@ -206,55 +208,77 @@ function updateStatusButton(btn, data) {
   }
 
   else if (context === "event") {
-    const taskId = btn.dataset.eventId;
-    const eventType = btn.dataset.eventType;  // "task" o "subtask"
+      console.log("EVENT CONTEXT ejecutado", btn.dataset.eventId);
+      const taskId = btn.dataset.eventId;
+      const eventType = btn.dataset.eventType;  // <--- obligatorio
 
-    // ✅ Aquí está la clave: obtener la task principal
-    let mainTaskId = (eventType === "task")
-        ? taskId                  // si es la task, su id ya vale
-        : btn.dataset.mainTaskId; // si es subtask, usamos data-main-task-id
+      // actualizar solo los botones relacionados
+      const relatedButtons = document.querySelectorAll(
+          `[data-event-id="${taskId}"][data-event-type="${eventType}"]`
+      );
 
-    if (!mainTaskId) mainTaskId = taskId; // fallback seguro
+      relatedButtons.forEach(b => {
+          if (data.status == 1) {
+              b.innerHTML = '<i class="bi bi-x-circle"></i>';
+              b.className = 'btn btn-warning btn-sm';
+          } else {
+              b.innerHTML = '<i class="bi bi-check-circle"></i>';
+              b.className = 'btn btn-success btn-sm';
+          }
+      });
 
-    fetch(`/task-progress/${mainTaskId}`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(r => r.json())
-    .then(progressData => {
-        const progress = progressData.task.progress || 0;
-        actualizarBarraTask(progress);
+      // determinar id de la task principal
+      let mainTaskId = (eventType === "task") ? taskId : btn.dataset.mainTaskId;
+      if (!mainTaskId) mainTaskId = taskId;
 
-        // actualizar botón de la task principal
-        const taskBtn = document.querySelector(`[data-event-id="${mainTaskId}"][data-event-type="task"]`);
-        if (taskBtn) {
-            if (progress === 100) {
-                taskBtn.innerHTML = '<i class="bi bi-x-circle"></i>';
-                taskBtn.className = 'btn btn-warning btn-sm';
-            } else {
-                taskBtn.innerHTML = '<i class="bi bi-check-circle"></i>';
-                taskBtn.className = 'btn btn-success btn-sm';
-            }
-        }
+      // 🔥 micro-delay para asegurar que Doctrine refleja flush
+      setTimeout(() => {
+          fetch(`/task-progress/${mainTaskId}`, {
+              method: 'GET',
+              headers: {
+                  'Accept': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+              },
+              cache: 'no-store'
+          })
+          .then(r => {
+              if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+              return r.json();
+          })
+          .then(progressData => {
+              console.log("FETCH progress recibido:", progressData.task.progress);
+              const progress = progressData.task.progress || 0;
+              actualizarBarraTask(progress);
 
-        // actualizar subtasks
-        progressData.subtasks.forEach(st => {
-            const subtaskBtn = document.querySelector(`[data-event-id="${st.id}"][data-event-type="subtask"]`);
-            if (subtaskBtn) {
-                if (st.status) {
-                    subtaskBtn.innerHTML = '<i class="bi bi-x-circle"></i>';
-                    subtaskBtn.className = 'btn btn-warning btn-sm';
-                } else {
-                    subtaskBtn.innerHTML = '<i class="bi bi-check-circle"></i>';
-                    subtaskBtn.className = 'btn btn-success btn-sm';
-                }
-            }
-        });
-    })
-    .catch(err => console.error("Error al actualizar barra:", err));
+              // actualizar botón de la task principal
+              const taskBtn = document.querySelector(`[data-event-id="${mainTaskId}"][data-event-type="task"]`);
+              if (taskBtn) {
+                  if (progress === 100) {
+                      taskBtn.innerHTML = '<i class="bi bi-x-circle"></i>';
+                      taskBtn.className = 'btn btn-warning btn-sm';
+                  } else {
+                      taskBtn.innerHTML = '<i class="bi bi-check-circle"></i>';
+                      taskBtn.className = 'btn btn-success btn-sm';
+                  }
+              }
+
+              // actualizar subtasks
+              progressData.subtasks.forEach(st => {
+                  const subtaskBtn = document.querySelector(`[data-event-id="${st.id}"][data-event-type="subtask"]`);
+                  if (subtaskBtn) {
+                      if (st.status) {
+                          subtaskBtn.innerHTML = '<i class="bi bi-x-circle"></i>';
+                          subtaskBtn.className = 'btn btn-warning btn-sm';
+                      } else {
+                          subtaskBtn.innerHTML = '<i class="bi bi-check-circle"></i>';
+                          subtaskBtn.className = 'btn btn-success btn-sm';
+                      }
+                  }
+              });
+
+          })
+          .catch(err => console.error("Error al actualizar barra:", err));
+      }, 20); // 20ms delay para que Doctrine refleje el flush
   }
 
 }
@@ -302,7 +326,6 @@ async function finalDelete(btn) {
 document.addEventListener('click', async function(e) {
 
   const btn = e.target.closest('[data-action]');
-
   if (!btn) return;
 
   switch (btn.dataset.action) {
@@ -352,13 +375,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Inicialización de la barra de progreso cuando se visualiza una tarea
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("init task bar");
 
     const progressBar = document.getElementById("progressBarTask");
     const mainTaskBtn = document.querySelector('[data-event-type="task"]');
 
+    console.log("progressBarTask:", progressBar);
+    console.log("task button:", mainTaskBtn);
+
     if (!progressBar || !mainTaskBtn) return;
 
     const mainTaskId = mainTaskBtn.dataset.eventId;
+
+    console.log("Fetching progress for task:", mainTaskId);
 
     fetch(`/task-progress/${mainTaskId}`, {
         headers: {
@@ -367,10 +396,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })
     .then(r => {
+        console.log("fetch response:", r);
         return r.json();
     })
     .then(progressData => {
+        console.log("progressData recibido:", progressData);
+
         const progress = progressData.task.progress || 0;
+
+        console.log("progress calculado:", progress);
 
         actualizarBarraTask(progress);
     })

@@ -110,11 +110,6 @@ class AjaxController extends AbstractController
     #[Route('/set-event-status/{tipo}/{id}', name: 'set_event_status')]
 public function privateSetEventStatus(Request $request, EntityManagerInterface $entityManager, string $tipo, int $id): JsonResponse
 {
-  file_put_contents(
-  $this->getParameter('kernel.project_dir') . '/progress_debug.log',
-  "FLUSH " . microtime(true) . PHP_EOL,
-  FILE_APPEND
-);
     $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
 
     if (!$request->isXmlHttpRequest()) {
@@ -161,11 +156,6 @@ public function privateSetEventStatus(Request $request, EntityManagerInterface $
     }
 
     $entityManager->flush();
-    file_put_contents(
-    $this->getParameter('kernel.project_dir') . '/progress_debug.log',
-    "PROGRESS " . microtime(true) . PHP_EOL,
-    FILE_APPEND
-);
 
     return new JsonResponse([
         'success' => true,
@@ -326,35 +316,21 @@ public function privateSetEventStatus(Request $request, EntityManagerInterface $
     #[Route('/task-progress/{id}', name: 'task_progress')]
     public function taskProgress(EntityManagerInterface $entityManager, int $id): JsonResponse
     {
-
         $task = $entityManager->getRepository(Task::class)->find($id);
-        if (!$task) {
-            throw $this->createNotFoundException("No task found with id $id");
-        }
+        if (!$task) throw $this->createNotFoundException("No task found with id $id");
 
-
-        $subtasks = $entityManager->getRepository(SubTask::class)
-            ->createQueryBuilder('st')
-            ->where('st.maintask = :task')
-            ->setParameter('task', $task)
-            ->getQuery()
-            ->getResult();
-
+        // 🔥 Trae todas las subtasks desde la DB, no desde la colección perezosa
+        $subtasks = $entityManager->getRepository(SubTask::class)->findBy(['maintask' => $task->getId()]);
         $done = 0;
         $subtasksData = [];
 
         foreach ($subtasks as $st) {
             if ($st->isStatus()) $done++;
-            $subtasksData[] = [
-                'id' => $st->getId(),
-                'status' => $st->isStatus()
-            ];
+            $subtasksData[] = ['id' => $st->getId(), 'status' => $st->isStatus()];
         }
 
-
-        $progress = count($subtasks) > 0
-            ? round(($done / count($subtasks)) * 100)
-            : ($task->isStatus() ? 100 : 0);
+        // Porcentaje: solo basado en subtasks si existen
+        $progress = count($subtasks) > 0 ? round(($done / count($subtasks)) * 100, 2) : ($task->isStatus() ? 100 : 0);
 
         return new JsonResponse([
             'task' => [
